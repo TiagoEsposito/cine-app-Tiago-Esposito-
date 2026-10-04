@@ -22,4 +22,8 @@ export class CompraConfirmada {
   }
 
   obtenerTotal(): number { return this.compra.venta()?.total ?? 0; }
+
+  descargarPdf(): void {
+    window.print();
+  }
 }

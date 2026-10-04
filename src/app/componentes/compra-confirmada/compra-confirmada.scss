@@ -148,10 +148,18 @@
   font-size: 1.3rem;
 }
 
+.acciones {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+
 .boton {
   display: flex;
   width: fit-content;
-  margin: 1.5rem auto 0;
+  margin: 0;
   padding: 0.78rem 1.15rem;
   border-radius: 10px;
   background: #181713;
@@ -182,5 +190,35 @@
   .qr {
     border-right: 0;
     border-bottom: 1px dashed #cfc9be;
+  }
+}
+
+@media print {
+  @page { size: A4; margin: 12mm; }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .compra-confirmada,
+  .compra-confirmada * {
+    visibility: visible !important;
+  }
+
+  .compra-confirmada {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+  }
+
+  .acciones {
+    display: none !important;
+  }
+
+  .entrada {
+    box-shadow: none;
   }
 }

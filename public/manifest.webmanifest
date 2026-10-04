@@ -1,0 +1,10 @@
+{
+  "name": "Cine Avellaneda",
+  "short_name": "Cine Avellaneda",
+  "theme_color": "#111111",
+  "background_color": "#111111",
+  "display": "standalone",
+  "scope": "/",
+  "start_url": "/",
+  "icons": []
+}

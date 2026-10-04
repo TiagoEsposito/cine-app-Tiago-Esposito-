@@ -22,8 +22,7 @@ export class ResumenCompra implements OnInit {
   async ngOnInit(): Promise<void> {
     try {
       const [categorias, productos, combos] = await Promise.all([this.candyService.obtenerCategorias(), this.candyService.obtenerProductos(), this.beneficios.obtenerCombos()]);
-      this.categorias.set(categorias); this.productos.set(productos); this.combos.set(combos);
-    } catch (e) { this.errorCandy.set(e instanceof Error ? e.message : 'No se pudo cargar Candy Bar.'); }
+      this.categorias.set(categorias); this.productos.set(productos); this.combos.set(combos);}
     finally { this.cargandoCandy.set(false); }
   }
   obtenerPrecioAsiento(asiento: Asiento): number { return this.compra.obtenerPrecioAsiento(asiento); }

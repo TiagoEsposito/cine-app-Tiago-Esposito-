@@ -2,12 +2,10 @@
   @if (!compra.tieneVenta() || !compra.tieneSeleccion()) {
     <div class="estado">
       <h1>Compra no encontrada</h1>
-
       <p>
         La información de esta entrada ya no está disponible
         en esta sesión.
       </p>
-
       <a routerLink="/cartelera" class="boton">
         Volver a cartelera
       </a>
@@ -15,9 +13,7 @@
   } @else {
     <div class="encabezado">
       <p class="etiqueta">Compra confirmada</p>
-
-      <h1>¡Listo! 🎟️</h1>
-
+      <h1> Listo! 🎟️</h1>
       <p>
         Tu compra fue registrada correctamente.
       </p>
@@ -30,34 +26,27 @@
           [width]="220"
           [errorCorrectionLevel]="'M'"
         ></qrcode>
-
         <p>Código de entrada</p>
-
         <small>
           {{ compra.venta()!.codigoQr }}
         </small>
       </div>
-
       <div class="datos">
         <p>
           <strong>Compra:</strong>
           #{{ compra.venta()!.id }}
         </p>
-
         <p>
           <strong>Función:</strong>
           {{ compra.funcion()!.fecha }}
           ·
           {{ compra.funcion()!.hora_inicio }}
         </p>
-
         <p>
           <strong>Sala:</strong>
           {{ compra.funcion()!.sala_id }}
         </p>
-
         <h2>Asientos</h2>
-
         <p>
           @for (asiento of compra.asientos(); track asiento.id) {
             {{ asiento.fila }}{{ asiento.numero }}
@@ -67,24 +56,25 @@
             }
           }
         </p>
-
         @if (compra.candy().length) {
           <h2>Candy Bar</h2>
           <p>@for (item of compra.candy(); track item.id) { {{ item.cantidad }} × {{ item.nombre }} @if (!$last) {, } }</p>
         }
-
         <div class="total">
           <span>Total</span>
-
           <strong>
             ${{ obtenerTotal() }}
           </strong>
         </div>
       </div>
     </div>
-
-    <a routerLink="/cartelera" class="boton">
-      Volver a cartelera
-    </a>
+    <div class="acciones">
+      <button type="button" class="boton boton-pdf" (click)="descargarPdf()">
+        Descargar entrada en PDF
+      </button>
+      <a routerLink="/cartelera" class="boton">
+        Volver a cartelera
+      </a>
+    </div>
   }
 </section>
