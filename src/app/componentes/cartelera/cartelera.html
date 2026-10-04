@@ -11,6 +11,35 @@
     </div>
   </div>
 
+  @if (preventa().length) {
+    <section class="proximamente" style="margin:30px 0">
+      <div class="seccion-titulo">
+        <div><span>PREVENTA</span><h2>Entradas anticipadas</h2></div>
+        <small>{{ preventa().length }} películas</small>
+      </div>
+      <div class="peliculas">
+        @for (pelicula of preventa(); track pelicula.id) {
+          <article class="pelicula" [routerLink]="['/pelicula', pelicula.id]">
+            <div class="poster-wrap">
+              @if (pelicula.url_poster) {
+                <img [src]="pelicula.url_poster" [alt]="'Póster de ' + pelicula.titulo" loading="lazy" />
+              } @else {
+                <div class="poster-vacio">Sin póster</div>
+              }
+              <div class="poster-overlay"><span>Ver película</span><b>↗</b></div>
+              <span class="edad">+{{ pelicula.edad_minima }}</span>
+            </div>
+            <div class="informacion">
+              <div class="titulo-linea"><h2>{{ pelicula.titulo }}</h2><span class="promedio">PREVENTA</span></div>
+              <p class="datos">Estreno: {{ pelicula.fecha_estreno }}</p>
+              <p class="sinopsis">Precio preventa: <strong>${{ pelicula.precio_preventa }}</strong></p>
+            </div>
+          </article>
+        }
+      </div>
+    </section>
+  }
+
   @if (proximamente().length) {
     <section class="proximamente" style="margin:30px 0"><div class="seccion-titulo"><div><span>PRÓXIMAMENTE</span><h2>Próximos estrenos</h2></div></div><div class="peliculas">@for (pelicula of proximamente(); track pelicula.id) {<article class="pelicula"><div class="poster-wrap">@if (pelicula.url_poster) {<img [src]="pelicula.url_poster" [alt]="pelicula.titulo" loading="lazy" />}</div><div class="informacion"><div class="titulo-linea"><h2>{{pelicula.titulo}}</h2></div><p class="datos">Estreno: {{pelicula.fecha_estreno}}</p><p class="sinopsis">{{pelicula.sinopsis}}</p><button type="button" class="boton" (click)="activarAlerta(pelicula)">🔔 Avisarme cuando esté disponible</button></div></article>}</div></section>
   }
@@ -85,7 +114,9 @@
           <div class="informacion">
             <div class="titulo-linea">
               <h2>{{ pelicula.titulo }}</h2>
-              @if (promedios()[pelicula.id] !== undefined) {
+              @if (preventa().some(p => p.id === pelicula.id)) {
+                <span class="promedio">PREVENTA</span>
+              } @else if (promedios()[pelicula.id] !== undefined) {
                 <span class="promedio">★ {{ promedios()[pelicula.id].toFixed(1) }}</span>
               }
             </div>

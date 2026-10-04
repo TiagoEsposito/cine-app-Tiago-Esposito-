@@ -36,6 +36,7 @@ export class Cartelera implements OnInit {
   readonly publicandoResena = signal(false);
   readonly errorResena = signal<string | null>(null);
   readonly proximamente = signal<Pelicula[]>([]);
+  readonly preventa = signal<Pelicula[]>([]);
 
   async activarAlerta(pelicula: Pelicula): Promise<void> {
     const usuario = this.auth.perfil();
@@ -72,7 +73,16 @@ export class Cartelera implements OnInit {
       ]);
 
       this.peliculas.set(peliculas);
-      this.proximamente.set(peliculas.filter(p => p.fecha_estreno && new Date(`${p.fecha_estreno}T00:00:00`) > new Date()));
+      const ahora = new Date();
+      const peliculasPreventa = peliculas.filter((p) => {
+        if (!p.preventa_activa || !p.fecha_estreno || p.precio_preventa == null) return false;
+        const estreno = new Date(`${p.fecha_estreno}T00:00:00`);
+        const inicioPreventa = new Date(estreno);
+        inicioPreventa.setDate(inicioPreventa.getDate() - 7);
+        return ahora >= inicioPreventa && ahora < estreno;
+      });
+      this.preventa.set(peliculasPreventa);
+      this.proximamente.set(peliculas.filter(p => p.fecha_estreno && new Date(`${p.fecha_estreno}T00:00:00`) > ahora));
       this.generos.set(generos);
 
       const resenasPorPelicula = await Promise.all(

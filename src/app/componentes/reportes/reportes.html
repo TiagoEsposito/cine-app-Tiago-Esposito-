@@ -1,0 +1,78 @@
+<section class="reportes-pagina">
+  <div class="encabezado">
+    <p class="etiqueta">Administración</p>
+    <h1>Reportes</h1>
+    <p>Resumen de ventas y productos a partir de las compras registradas.</p>
+  </div>
+
+  @if (error()) {
+    <div class="error">{{ error() }}</div>
+  }
+  @if (cargando()) {
+    <div class="panel">Cargando reportes...</div>
+  } @else {
+    <div class="metricas">
+      <article>
+        <span>Facturación de hoy</span>
+        <strong>${{ resumen().ingresos | number:'1.0-0' }}</strong>
+      </article>
+
+      <article>
+        <span>Entradas vendidas hoy</span>
+        <strong>{{ resumen().entradas }}</strong>
+      </article>
+
+      <article>
+        <span>Compras de hoy</span>
+        <strong>{{ resumen().compras }}</strong>
+      </article>
+    </div>
+    <div class="grid">
+      <article class="panel">
+        <h2>Películas más vendidas · 7 días</h2>
+
+        @for (item of semana(); track item.nombre) {
+          <div class="fila">
+            <div>
+              <strong>{{ item.nombre }}</strong>
+              <small>{{ item.entradas }} entradas</small>
+            </div>
+            <b>${{ item.ingresos | number:'1.0-0' }}</b>
+          </div>
+        } @empty {
+          <p>No hay ventas en este período.</p>
+        }
+      </article>
+      <article class="panel">
+        <h2>Películas más vendidas · mes</h2>
+        @for (item of mes(); track item.nombre) {
+          <div class="fila">
+            <div>
+              <strong>{{ item.nombre }}</strong>
+              <small>{{ item.entradas }} entradas</small>
+            </div>
+            <b>${{ item.ingresos | number:'1.0-0' }}</b>
+          </div>
+        } @empty {
+          <p>No hay ventas en este período.</p>
+        }
+      </article>
+
+      <article class="panel">
+        <h2>Candy Bar · mes</h2>
+
+        @for (item of candy(); track item.nombre) {
+          <div class="fila">
+            <div>
+              <strong>{{ item.nombre }}</strong>
+              <small>{{ item.cantidad }} unidades</small>
+            </div>
+            <b>${{ item.ingresos | number:'1.0-0' }}</b>
+          </div>
+        } @empty {
+          <p>No hay ventas de Candy Bar.</p>
+        }
+      </article>
+    </div>
+  }
+</section>

@@ -45,6 +45,7 @@ export class AsientosService {
     asientoIds: number[],
     total: number,
     candy: CandyItem[] = [],
+    detalleCompra: { combos: { nombre: string; cantidad: number; precio: number }[]; candy: { nombre: string; cantidad: number; precio: number }[] } = { combos: [], candy: [] },
   ): Promise<{ id: number; codigoQr: string; total: number }> {
     if (!asientoIds.length) throw new Error('Seleccioná al menos una butaca.');
 
@@ -76,6 +77,7 @@ export class AsientosService {
         total: Number(total),
         estado: 'pagada',
         codigo_qr: codigoQr,
+        detalle_compra: detalleCompra,
       })
       .select('id,total,codigo_qr')
       .single();

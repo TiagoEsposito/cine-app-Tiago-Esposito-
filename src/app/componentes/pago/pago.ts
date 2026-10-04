@@ -54,7 +54,11 @@ export class Pago {
       const ocupados = await this.asientosService.obtenerAsientosOcupados(funcion.id);
       if (asientoIds.some(id => ocupados.includes(id))) throw new Error('Uno de los asientos seleccionados ya fue ocupado. Volvé a elegir tus asientos.');
       const usuarioId = this.authService.perfil()?.id ?? null;
-      const venta = await this.asientosService.crearVenta(funcion.id, usuarioId, asientoIds, this.obtenerTotal(), this.compra.productosParaVenta());
+      const detalleCompra = {
+        combos: this.compra.combos().map(combo => ({ nombre: combo.nombre, cantidad: combo.cantidad, precio: Number(combo.precio) })),
+        candy: this.compra.candy().map(item => ({ nombre: item.nombre, cantidad: item.cantidad, precio: Number(item.precio) })),
+      };
+      const venta = await this.asientosService.crearVenta(funcion.id, usuarioId, asientoIds, this.obtenerTotal(), this.compra.productosParaVenta(), detalleCompra);
       if (usuarioId) {
         try { await this.beneficios.sumarPuntos(usuarioId, this.obtenerTotal(), venta.id); await this.authService.recargarPerfil(); } catch { /* el pago no se revierte por un fallo de puntos */ }
       }

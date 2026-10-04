@@ -76,7 +76,7 @@ export class AdminService {
     const finNuevo = this.minutos(horaFin);
     if (finNuevo <= inicioNuevo) throw new Error('La hora de fin debe ser posterior a la hora de inicio.');
 
-    const salaLibre = (salas ?? []).find((sala: { id: number }) => {
+    const salasDisponibles = (salas ?? []).filter((sala: { id: number }) => {
       const deSala = (funciones ?? []).filter((f: any) => Number(f.sala_id) === Number(sala.id));
       return deSala.every((f: any) => {
         const inicio = this.minutos(f.hora_inicio);
@@ -85,7 +85,16 @@ export class AdminService {
       });
     });
 
-    if (!salaLibre) throw new Error('No hay una sala disponible para ese horario.');
+    if (!salasDisponibles.length) throw new Error('No hay una sala disponible para ese horario.');
+
+    // Distribuimos las funciones entre las salas disponibles.
+    // Si varias están libres, usamos primero la que tenga menos funciones.
+    // Si hay empate, gana la de menor ID.
+    const salaLibre = salasDisponibles.sort((a: { id: number }, b: { id: number }) => {
+      const cantidadA = (funciones ?? []).filter((f: any) => Number(f.sala_id) === Number(a.id)).length;
+      const cantidadB = (funciones ?? []).filter((f: any) => Number(f.sala_id) === Number(b.id)).length;
+      return cantidadA - cantidadB || Number(a.id) - Number(b.id);
+    })[0];
 
     const { data, error } = await this.supabase.cliente
       .from('funciones')

@@ -1,5 +1,171 @@
-.mis-peliculas { max-width:1050px; margin:0 auto; }.encabezado { margin-bottom:1.6rem; }.volver { display:inline-flex; margin-bottom:1.2rem; color:#716d65; font-size:.78rem; font-weight:750; text-decoration:none; }.volver:hover{color:#9b690e}.etiqueta{margin:0;color:#b07816;font-size:.68rem;font-weight:850;letter-spacing:.14em;text-transform:uppercase}.encabezado h1{margin:.35rem 0 .45rem;color:#171713;font-size:clamp(2.3rem,5vw,3.7rem);line-height:1;letter-spacing:-.06em}.encabezado p:last-child{margin:0;color:#858078}.lista{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.8rem}.pelicula-comprada{display:grid;grid-template-columns:105px minmax(0,1fr);gap:1rem;padding:.8rem;border:1px solid #dedbd3;border-radius:15px;background:#fffdf9;box-shadow:0 10px 25px rgba(30,28,22,.035)}.poster{overflow:hidden;border-radius:9px;background:#eeebe3;aspect-ratio:2/3}.poster img{width:100%;height:100%;display:block;object-fit:cover}.datos{display:flex;flex-direction:column;min-width:0}.estado{display:inline-flex;align-self:flex-start;padding:.23rem .45rem;border-radius:999px;background:#edf5ee;color:#48664e;font-size:.59rem;font-weight:850;text-transform:uppercase}.datos h2{margin:.35rem 0 .3rem;color:#292720;font-size:1.05rem;letter-spacing:-.025em}.funcion,.asientos{margin:0;color:#777169;font-size:.72rem;line-height:1.5}.asientos{margin-top:.2rem}.pie-card{display:flex;justify-content:space-between;align-items:flex-end;gap:.5rem;margin-top:auto;padding-top:1rem}.pie-card strong{color:#292720}.pie-card a{color:#9b690e;font-size:.7rem;font-weight:850;text-decoration:none}.vacio,.estado{padding:1.3rem;border-radius:13px;background:#f1eee7;color:#777169}.vacio{display:flex;flex-direction:column;align-items:flex-start;gap:.35rem}.vacio strong{color:#3c3932}.vacio a{margin-top:.4rem;color:#9b690e;font-size:.78rem;font-weight:850;text-decoration:none}.estado.error{background:#fff0ee;color:#8b3030}@media(max-width:750px){.lista{grid-template-columns:1fr}}@media(max-width:430px){.pelicula-comprada{grid-template-columns:80px minmax(0,1fr)}.pie-card{align-items:flex-start;flex-direction:column}}
+.mis-peliculas {
+  max-width: 1050px;
+  margin: 0 auto;
+}
+.encabezado {
+  margin-bottom: 1.6rem;
+}
+.volver {
+  display: inline-flex;
+  margin-bottom: 1.2rem;
+  color: #716d65;
+  font-size: 0.78rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+.volver:hover {
+  color: #9b690e;
+}
+.etiqueta {
+  margin: 0;
+  color: #b07816;
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.encabezado h1 {
+  margin: 0.35rem 0 0.45rem;
+  color: #171713;
+  font-size: clamp(2.3rem, 5vw, 3.7rem);
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+.encabezado p:last-child {
+  margin: 0;
+  color: #858078;
+}
+.lista {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+.pelicula-comprada {
+  display: grid;
+  grid-template-columns: 105px minmax(0, 1fr);
+  gap: 1rem;
+  padding: 0.8rem;
+  border: 1px solid #dedbd3;
+  border-radius: 15px;
+  background: #fffdf9;
+  box-shadow: 0 10px 25px rgba(30, 28, 22, 0.035);
+}
+.poster {
+  overflow: hidden;
+  border-radius: 9px;
+  background: #eeebe3;
+  aspect-ratio: 2/3;
+}
+.poster img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+.datos {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.estado {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 0.23rem 0.45rem;
+  border-radius: 999px;
+  background: #edf5ee;
+  color: #48664e;
+  font-size: 0.59rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+.datos h2 {
+  margin: 0.35rem 0 0.3rem;
+  color: #292720;
+  font-size: 1.05rem;
+  letter-spacing: -0.025em;
+}
+.funcion,
+.asientos {
+  margin: 0;
+  color: #777169;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+.asientos {
+  margin-top: 0.2rem;
+}
+.pie-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 1rem;
+}
+.pie-card strong {
+  color: #292720;
+}
+.pie-card a {
+  color: #9b690e;
+  font-size: 0.7rem;
+  font-weight: 850;
+  text-decoration: none;
+}
+.vacio,
+.estado {
+  padding: 1.3rem;
+  border-radius: 13px;
+  background: #f1eee7;
+  color: #777169;
+}
+.vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+.vacio strong {
+  color: #3c3932;
+}
+.vacio a {
+  margin-top: 0.4rem;
+  color: #9b690e;
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-decoration: none;
+}
+.estado.error {
+  background: #fff0ee;
+  color: #8b3030;
+}
+@media (max-width: 750px) {
+  .lista {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 430px) {
+  .pelicula-comprada {
+    grid-template-columns: 80px minmax(0, 1fr);
+  }
+  .pie-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
 
-.calificacion{display:flex;align-items:center;gap:.45rem;margin-top:.55rem;min-height:18px}
-.calificacion span{color:#969087;font-size:.64rem}
-.calificacion strong{color:#b07816;font-size:.72rem;letter-spacing:.03em}
+.calificacion {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.55rem;
+  min-height: 18px;
+}
+.calificacion span {
+  color: #969087;
+  font-size: 0.64rem;
+}
+.calificacion strong {
+  color: #b07816;
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+}

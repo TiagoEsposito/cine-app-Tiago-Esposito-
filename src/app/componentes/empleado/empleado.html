@@ -1,0 +1,98 @@
+<section class="empleado-pagina">
+  <div class="encabezado">
+    <p class="etiqueta">Personal del cine</p>
+    <h1>Validación de QR</h1>
+    <p>Ingresá el código del QR para ver toda la compra y validarla de una sola vez.</p>
+  </div>
+
+  <article class="panel">
+    <label>Código QR
+      <input [(ngModel)]="codigo" placeholder="Pegá o escribí el código" autocomplete="off" (keyup.enter)="buscar()">
+    </label>
+    <button type="button" (click)="buscar()" [disabled]="cargando()">
+      {{ cargando() ? 'Buscando...' : 'Buscar compra' }}
+    </button>
+  </article>
+
+  @if (error()) { <div class="error">{{ error() }}</div> }
+  @if (mensaje()) { <div class="mensaje">{{ mensaje() }}</div> }
+
+  @if (venta(); as compra) {
+    <article class="panel compra">
+      <div>
+        <span>Compra #{{ compra.id }}</span>
+        <h2>{{ compra.funcion?.pelicula?.titulo ?? 'Película' }}</h2>
+        @if (compra.funcion) {
+          <p>{{ compra.funcion.fecha }} · {{ compra.funcion.hora_inicio }} · Sala {{ compra.funcion.sala_id }}</p>
+        }
+      </div>
+      <strong>${{ compra.total }}</strong>
+    </article>
+
+    <article class="panel detalle-compra">
+      <div class="detalle-titulo">
+        <div>
+          <span class="etiqueta">Detalle de compra</span>
+          <h2>Lo que compró el cliente</h2>
+        </div>
+        <span class="estado-compra">Compra #{{ compra.id }}</span>
+      </div>
+
+      <div class="detalle-linea entrada-linea">
+        <div>
+          <strong>🎬 Entrada</strong>
+          <span>{{ compra.funcion?.pelicula?.titulo ?? 'Película' }}</span>
+        </div>
+        <strong>x1</strong>
+      </div>
+
+      @for (combo of compra.detalle_compra?.combos ?? []; track combo.nombre) {
+        <div class="detalle-linea">
+          <div>
+            <strong>🍿 {{ combo.nombre }}</strong>
+            <span>Combo · ${{ combo.precio }}</span>
+          </div>
+          <strong>x{{ combo.cantidad }}</strong>
+        </div>
+      }
+
+      @for (item of compra.detalle_compra?.candy ?? []; track item.nombre) {
+        <div class="detalle-linea">
+          <div>
+            <strong>🥤 {{ item.nombre }}</strong>
+            <span>Candy Bar · ${{ item.precio }}</span>
+          </div>
+          <strong>x{{ item.cantidad }}</strong>
+        </div>
+      }
+
+      @if (!compra.detalle_compra?.combos?.length && !compra.detalle_compra?.candy?.length) {
+        @for (item of compra.productos ?? []; track item.nombre) {
+          <div class="detalle-linea">
+            <div>
+              <strong>🥤 {{ item.nombre }}</strong>
+              <span>Candy Bar · ${{ item.precio }}</span>
+            </div>
+            <strong>x{{ item.cantidad }}</strong>
+          </div>
+        }
+      }
+
+      @if (!(compra.detalle_compra?.combos?.length) && !(compra.detalle_compra?.candy?.length) && !(compra.productos?.length)) {
+        <p class="sin-candy">No compró productos del Candy Bar.</p>
+      }
+    </article>
+
+    @if (compra.entrada_validada || compra.candy_retirado) {
+      <div class="bloqueado">Este QR ya fue utilizado. No puede volver a validarse.</div>
+    } @else {
+      <article class="panel accion">
+        <h2>Validar compra</h2>
+        <p>Al validar este QR se registra la entrada y, si corresponde, la entrega de todo el Candy Bar incluido en la compra.</p>
+        <button type="button" (click)="validar()" [disabled]="cargando()">
+          {{ cargando() ? 'Validando...' : 'Validar QR' }}
+        </button>
+      </article>
+    }
+  }
+</section>

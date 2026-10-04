@@ -13,7 +13,8 @@
       @if (auth.haIniciadoSesion()) {
         <a routerLink="/mis-peliculas" routerLinkActive="activo">Mis películas</a>
         <a routerLink="/perfil" routerLinkActive="activo">Mi cuenta</a>
-        @if (auth.esAdmin()) { <a routerLink="/admin" routerLinkActive="activo">Admin</a> }
+        @if (auth.esStaff()) { <a routerLink="/empleado" routerLinkActive="activo">Empleado</a> }
+        @if (auth.esAdmin()) { <a routerLink="/admin" routerLinkActive="activo">Admin</a> <a routerLink="/reportes" routerLinkActive="activo">Reportes</a> }
       } @else {
         <a routerLink="/registro" routerLinkActive="activo">Crear cuenta</a>
       }
