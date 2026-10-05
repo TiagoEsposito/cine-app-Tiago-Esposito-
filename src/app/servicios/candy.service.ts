@@ -15,7 +15,7 @@ export class CandyService {
 
   async obtenerProductos(): Promise<CandyProducto[]> {
     const { data, error } = await this.supabase.cliente
-      .from('candy_productos').select('*').eq('activo', true).gt('stock', 0).order('nombre');
+      .from('candy_productos').select('*').eq('activo', true).order('nombre');
     if (error) throw error;
     return data ?? [];
   }

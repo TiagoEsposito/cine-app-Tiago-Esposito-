@@ -2,19 +2,16 @@
   <div class="encabezado">
     <p class="etiqueta">Administración</p>
     <h1>Panel de Cine Avellaneda</h1>
-    <p>Salas, funciones, beneficios, preventa y combos.</p>
+    <p>Salas, películas, funciones, beneficios y Candy Bar.</p>
   </div>
 
   @if (mensaje()) {
-    <div class="mensaje">
-      {{ mensaje() }}
-    </div>
+    <div class="mensaje">{{ mensaje() }}</div>
   }
   @if (error()) {
-    <div class="error">
-      {{ error() }}
-    </div>
+    <div class="error">{{ error() }}</div>
   }
+
   <div class="admin-grid">
     <article class="panel">
       <div class="panel-head">
@@ -23,12 +20,10 @@
           <h2>Administrar salas</h2>
         </div>
       </div>
+
       <div class="alta">
         <input [(ngModel)]="nuevaSala" placeholder="Nombre de la sala">
-
-        <button type="button" (click)="crearSala()">
-          Crear sala
-        </button>
+        <button type="button" (click)="crearSala()">Crear sala</button>
       </div>
 
       <div class="lista">
@@ -38,7 +33,6 @@
               <strong>{{ sala.nombre }}</strong>
               <small>Sala #{{ sala.id }}</small>
             </div>
-
             <button
               type="button"
               (click)="generarAsientos(sala)"
@@ -50,6 +44,7 @@
         }
       </div>
     </article>
+
     <article class="panel">
       <div class="panel-head">
         <div>
@@ -58,6 +53,7 @@
         </div>
         <small>Asignación automática</small>
       </div>
+
       <div class="form">
         <label>
           Película
@@ -68,6 +64,7 @@
             }
           </select>
         </label>
+
         <label>
           Fecha
           <input type="date" [(ngModel)]="fecha">
@@ -78,10 +75,28 @@
             Inicio
             <input type="time" [(ngModel)]="horaInicio">
           </label>
-
           <label>
             Fin
             <input type="time" [(ngModel)]="horaFin">
+          </label>
+        </div>
+
+        <div class="dos">
+          <label>
+            Formato
+            <select [(ngModel)]="formato">
+              <option value="2D">2D</option>
+              <option value="3D">3D</option>
+              <option value="4D">4D</option>
+              <option value="5D">5D</option>
+            </select>
+          </label>
+          <label>
+            Idioma
+            <select [(ngModel)]="idioma">
+              <option value="Castellano">Castellano</option>
+              <option value="Subtitulada">Subtitulada</option>
+            </select>
           </label>
         </div>
 
@@ -90,132 +105,248 @@
           <input type="number" min="0" [(ngModel)]="precio">
         </label>
 
-        <button type="button" (click)="crearFuncion()">
-          Crear función
-        </button>
+        <button type="button" (click)="crearFuncion()">Crear función</button>
       </div>
     </article>
   </div>
+
   <div class="admin-grid">
-    <!-- CUPONES -->
+    <article class="panel">
+      <div class="panel-head">
+        <div>
+          <span>Películas</span>
+          <h2>Configurar película</h2>
+        </div>
+      </div>
+
+      <div class="form">
+        <label>
+          Película
+          <select [(ngModel)]="peliculaEdicionId" (ngModelChange)="seleccionarPelicula()">
+            <option [ngValue]="0">Seleccionar...</option>
+            @for (p of peliculas(); track p.id) {
+              <option [ngValue]="p.id">{{ p.titulo }}</option>
+            }
+          </select>
+        </label>
+
+        @if (peliculaEdicionId) {
+          <label>
+            Título
+            <input [(ngModel)]="peliculaTituloEdit">
+          </label>
+
+          <label>
+            Sinopsis
+            <textarea rows="3" [(ngModel)]="peliculaSinopsis"></textarea>
+          </label>
+
+          <div class="dos">
+            <label>
+              Duración
+              <input type="number" min="1" [(ngModel)]="peliculaDuracion">
+            </label>
+            <label>
+              Edad mínima
+              <input type="number" min="0" [(ngModel)]="peliculaEdad">
+            </label>
+          </div>
+
+          <label>
+            URL del póster
+            <input [(ngModel)]="peliculaPoster">
+          </label>
+
+          <label>
+            Fecha de estreno
+            <input type="date" [(ngModel)]="peliculaEstreno">
+          </label>
+
+          <label class="check">
+            <input type="checkbox" [(ngModel)]="peliculaActiva">
+            Mostrar película en la cartelera
+          </label>
+
+          <button type="button" (click)="guardarPelicula()">Guardar película</button>
+        }
+      </div>
+    </article>
+
+    <article class="panel">
+      <div class="panel-head">
+        <div>
+          <span>Candy Bar</span>
+          <h2>Productos</h2>
+        </div>
+        <button type="button" class="boton-secundario" (click)="limpiarProducto()">
+          Nuevo
+        </button>
+      </div>
+
+      <div class="form">
+        <label>
+          Producto
+          <select [(ngModel)]="productoEdicionId" (ngModelChange)="seleccionarProducto()">
+            <option [ngValue]="0">Nuevo producto...</option>
+            @for (p of productos(); track p.id) {
+              <option [ngValue]="p.id">{{ p.nombre }}</option>
+            }
+          </select>
+        </label>
+
+        <label>
+          Nombre
+          <input [(ngModel)]="productoNombre">
+        </label>
+
+        <label>
+          Descripción
+          <input [(ngModel)]="productoDescripcion">
+        </label>
+
+        <div class="dos">
+          <label>
+            Categoría
+            <select [(ngModel)]="productoCategoriaId">
+              <option [ngValue]="0">Seleccionar...</option>
+              @for (categoria of categorias(); track categoria.id) {
+                @if (categoria.activa) {
+                  <option [ngValue]="categoria.id">{{ categoria.nombre }}</option>
+                }
+              }
+            </select>
+          </label>
+
+          <label>
+            Precio
+            <input type="number" min="0" [(ngModel)]="productoPrecio">
+          </label>
+        </div>
+
+        <label>
+          Imagen
+          <input [(ngModel)]="productoImagen" placeholder="URL">
+        </label>
+
+        <button type="button" (click)="guardarProducto()">
+          {{ productoEdicionId ? 'Guardar cambios' : 'Crear producto' }}
+        </button>
+      </div>
+
+      <div class="lista corta">
+        @for (producto of productos(); track producto.id) {
+          <div class="fila">
+            <div>
+              <strong>{{ producto.nombre }}</strong>
+              <small>${{ producto.precio }}</small>
+            </div>
+            <button type="button" (click)="cambiarEstadoProducto(producto)">
+              {{ producto.activo ? 'Desactivar' : 'Activar' }}
+            </button>
+          </div>
+        }
+      </div>
+    </article>
+  </div>
+
+  <div class="admin-grid">
+    <article class="panel">
+      <span>Categorías</span>
+      <h2>Administrar Candy Bar</h2>
+
+      <div class="alta">
+        <input [(ngModel)]="nuevaCategoria" placeholder="Nueva categoría">
+        <button type="button" (click)="crearCategoria()">Crear</button>
+      </div>
+
+      <div class="lista corta">
+        @for (categoria of categorias(); track categoria.id) {
+          <div class="fila">
+            <div>
+              <strong>{{ categoria.nombre }}</strong>
+              <small>{{ categoria.activa ? 'Activa' : 'Inactiva' }}</small>
+            </div>
+            <button type="button" (click)="cambiarEstadoCategoria(categoria)">
+              {{ categoria.activa ? 'Desactivar' : 'Activar' }}
+            </button>
+          </div>
+        }
+      </div>
+    </article>
+
     <article class="panel">
       <span>Cupones</span>
       <h2>Nuevo cupón</h2>
       <div class="form">
         <input [(ngModel)]="codigo" placeholder="Código">
-        <input
-          type="number"
-          [(ngModel)]="porcentaje"
-          min="1"
-          max="100"
-          placeholder="%"
-        >
-        <label>
+        <input type="number" [(ngModel)]="porcentaje" min="1" max="100" placeholder="%">
+        <label class="check">
           <input type="checkbox" [(ngModel)]="primeraCompra">
           Primera compra
         </label>
-        <input
-          type="number"
-          [(ngModel)]="edadMinima"
-          min="0"
-          placeholder="Edad mínima"
-        >
-        <button type="button" (click)="crearCupon()">
-          Crear cupón
-        </button>
+        <input type="number" [(ngModel)]="edadMinima" min="0" placeholder="Edad mínima">
+        <button type="button" (click)="crearCupon()">Crear cupón</button>
       </div>
       <small>Activos: {{ cupones().length }}</small>
     </article>
+  </div>
+
+  <div class="admin-grid">
     <article class="panel">
       <span>Fidelización</span>
       <h2>Nueva recompensa</h2>
       <div class="form">
         <input [(ngModel)]="recompensaNombre" placeholder="Nombre">
-        <input
-          type="number"
-          [(ngModel)]="costoPuntos"
-          min="1"
-          placeholder="Puntos"
-        >
-        <button type="button" (click)="crearRecompensa()">
-          Crear recompensa
-        </button>
+        <input type="number" [(ngModel)]="costoPuntos" min="1" placeholder="Puntos">
+        <button type="button" (click)="crearRecompensa()">Crear recompensa</button>
       </div>
       <small>Recompensas: {{ recompensas().length }}</small>
     </article>
-  </div>
-  <div class="admin-grid">
-    <!-- COMBOS -->
+
     <article class="panel">
       <span>Combos</span>
       <h2>Nuevo combo</h2>
       <div class="form">
         <input [(ngModel)]="comboNombre" placeholder="Nombre">
         <input [(ngModel)]="comboDescripcion" placeholder="Descripción">
-        <input
-          type="number"
-          [(ngModel)]="comboPrecio"
-          min="0"
-          placeholder="Precio"
-        >
+        <input type="number" [(ngModel)]="comboPrecio" min="0" placeholder="Precio">
+
         <select [(ngModel)]="comboProductoId">
           <option [ngValue]="0">Pochoclos...</option>
           @for (p of productos(); track p.id) {
-            <option [ngValue]="p.id">{{ p.nombre }}</option>
+            @if (p.activo) {
+              <option [ngValue]="p.id">{{ p.nombre }}</option>
+            }
           }
         </select>
-        <input
-          type="number"
-          [(ngModel)]="comboCantidad"
-          min="1"
-          placeholder="Cantidad"
-        >
+        <input type="number" [(ngModel)]="comboCantidad" min="1">
+
         <select [(ngModel)]="comboProductoId2">
           <option [ngValue]="0">Bebida...</option>
           @for (p of productos(); track p.id) {
-            <option [ngValue]="p.id">{{ p.nombre }}</option>
+            @if (p.activo) {
+              <option [ngValue]="p.id">{{ p.nombre }}</option>
+            }
           }
         </select>
         <input type="number" [(ngModel)]="comboCantidad2" min="1">
+
         <select [(ngModel)]="comboProductoId3">
           <option [ngValue]="0">Extra...</option>
           @for (p of productos(); track p.id) {
-            <option [ngValue]="p.id">{{ p.nombre }}</option>
+            @if (p.activo) {
+              <option [ngValue]="p.id">{{ p.nombre }}</option>
+            }
           }
         </select>
         <input type="number" [(ngModel)]="comboCantidad3" min="1">
-        <button type="button" (click)="crearCombo()">
-          Crear combo
-        </button>
+
+        <button type="button" (click)="crearCombo()">Crear combo</button>
       </div>
       <small>Combos: {{ combos().length }}</small>
     </article>
-    <article class="panel">
-      <span>Preventa</span>
-      <h2>Configurar preventa</h2>
-      <div class="form">
-        <select [(ngModel)]="preventaPelicula">
-          <option [ngValue]="0">Película...</option>
-          @for (p of peliculas(); track p.id) {
-            <option [ngValue]="p.id">{{ p.titulo }}</option>
-          }
-        </select>
-        <label>
-          <input type="checkbox" [(ngModel)]="preventaActiva">
-          Preventa activa
-        </label>
-        <input
-          type="number"
-          [(ngModel)]="preventaPrecio"
-          min="0"
-          placeholder="Precio preventa"
-        >
-        <button type="button" (click)="guardarPreventa()">
-          Guardar preventa
-        </button>
-      </div>
-    </article>
   </div>
+
   <article class="panel funciones-panel">
     <div class="panel-head">
       <div>
@@ -223,15 +354,43 @@
         <h2>Funciones programadas</h2>
       </div>
     </div>
+
     <div class="tabla">
       @for (f of funciones(); track f.id) {
         <div class="funcion-row">
           <strong>{{ peliculaTitulo(f.pelicula_id) }}</strong>
           <span>{{ f.fecha }} · {{ f.hora_inicio }}–{{ f.hora_fin }}</span>
           <span>Sala {{ f.sala_id }}</span>
+          <span>{{ f.formato ?? '2D' }} · {{ f.idioma ?? 'Castellano' }}</span>
           <b>${{ f.precio }}</b>
         </div>
       }
+    </div>
+  </article>
+
+  <article class="panel funciones-panel">
+    <div class="panel-head">
+      <div>
+        <span>Preventa</span>
+        <h2>Configurar preventa</h2>
+      </div>
+    </div>
+
+    <div class="form">
+      <select [(ngModel)]="preventaPelicula">
+        <option [ngValue]="0">Película...</option>
+        @for (p of peliculas(); track p.id) {
+          <option [ngValue]="p.id">{{ p.titulo }}</option>
+        }
+      </select>
+
+      <label class="check">
+        <input type="checkbox" [(ngModel)]="preventaActiva">
+        Preventa activa
+      </label>
+
+      <input type="number" [(ngModel)]="preventaPrecio" min="0" placeholder="Precio preventa">
+      <button type="button" (click)="guardarPreventa()">Guardar preventa</button>
     </div>
   </article>
 </section>

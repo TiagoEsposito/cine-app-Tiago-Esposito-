@@ -2,12 +2,13 @@
   <div class="encabezado">
     <p class="etiqueta">Administración</p>
     <h1>Reportes</h1>
-    <p>Resumen de ventas y productos a partir de las compras registradas.</p>
+    <p>Resumen de ventas, vistas y productos a partir de la actividad del cine.</p>
   </div>
 
   @if (error()) {
     <div class="error">{{ error() }}</div>
   }
+
   @if (cargando()) {
     <div class="panel">Cargando reportes...</div>
   } @else {
@@ -16,21 +17,76 @@
         <span>Facturación de hoy</span>
         <strong>${{ resumen().ingresos | number:'1.0-0' }}</strong>
       </article>
-
       <article>
         <span>Entradas vendidas hoy</span>
         <strong>{{ resumen().entradas }}</strong>
       </article>
-
       <article>
         <span>Compras de hoy</span>
         <strong>{{ resumen().compras }}</strong>
       </article>
     </div>
+
+    @if (candyMasVendido()) {
+      <article class="destacado">
+        <div>
+          <span>Producto destacado · este mes</span>
+          <h2>{{ candyMasVendido()!.nombre }}</h2>
+          <p>{{ candyMasVendido()!.cantidad }} unidades vendidas</p>
+        </div>
+        <strong>${{ candyMasVendido()!.ingresos | number:'1.0-0' }}</strong>
+      </article>
+    }
+
     <div class="grid">
       <article class="panel">
-        <h2>Películas más vendidas · 7 días</h2>
+        <div class="panel-titulo">
+          <div>
+            <span>Vistas</span>
+            <h2>Películas más vistas · semana</h2>
+          </div>
+        </div>
 
+        @for (item of vistasSemana(); track item.nombre) {
+          <div class="grafico-fila">
+            <div class="grafico-cabecera">
+              <strong>{{ item.nombre }}</strong>
+              <b>{{ item.cantidad }}</b>
+            </div>
+            <div class="barra">
+              <span [style.width.%]="porcentaje(item, vistasSemana())"></span>
+            </div>
+          </div>
+        } @empty {
+          <p>No hay vistas registradas en este período.</p>
+        }
+      </article>
+
+      <article class="panel">
+        <div class="panel-titulo">
+          <div>
+            <span>Vistas</span>
+            <h2>Películas más vistas · mes</h2>
+          </div>
+        </div>
+
+        @for (item of vistasMes(); track item.nombre) {
+          <div class="grafico-fila">
+            <div class="grafico-cabecera">
+              <strong>{{ item.nombre }}</strong>
+              <b>{{ item.cantidad }}</b>
+            </div>
+            <div class="barra">
+              <span [style.width.%]="porcentaje(item, vistasMes())"></span>
+            </div>
+          </div>
+        } @empty {
+          <p>No hay vistas registradas en este período.</p>
+        }
+      </article>
+
+      <article class="panel">
+        <h2>Películas más vendidas · 7 días</h2>
         @for (item of semana(); track item.nombre) {
           <div class="fila">
             <div>
@@ -43,6 +99,7 @@
           <p>No hay ventas en este período.</p>
         }
       </article>
+
       <article class="panel">
         <h2>Películas más vendidas · mes</h2>
         @for (item of mes(); track item.nombre) {
@@ -60,7 +117,6 @@
 
       <article class="panel">
         <h2>Candy Bar · mes</h2>
-
         @for (item of candy(); track item.nombre) {
           <div class="fila">
             <div>

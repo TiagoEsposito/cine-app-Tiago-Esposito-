@@ -37,16 +37,39 @@ export class Cartelera implements OnInit {
   readonly errorResena = signal<string | null>(null);
   readonly proximamente = signal<Pelicula[]>([]);
   readonly preventa = signal<Pelicula[]>([]);
+  readonly destacadas = signal<{
+    id: number;
+    titulo: string;
+    url_poster: string | null;
+    entradas: number;
+  }[]>([]);
 
   async activarAlerta(pelicula: Pelicula): Promise<void> {
     const usuario = this.auth.perfil();
-    if (!usuario) { this.error.set('Iniciá sesión para activar una alerta.'); return; }
+    if (!usuario) {
+      this.error.set('Iniciá sesión para activar una alerta.');
+      return;
+    }
+
     try {
       await this.beneficios.activarAlerta(usuario.id, pelicula.id);
-      if ('Notification' in window && Notification.permission === 'default') await Notification.requestPermission();
-      if ('Notification' in window && Notification.permission === 'granted') new Notification('Cine Avellaneda', { body: `Te avisaremos cuando ${pelicula.titulo} esté disponible.` });
+
+      if ('Notification' in window && Notification.permission === 'default') {
+        await Notification.requestPermission();
+      }
+
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Cine Avellaneda', {
+          body: `Te avisaremos cuando ${pelicula.titulo} esté disponible.`,
+        });
+      }
+
       this.error.set(null);
-    } catch (e) { this.error.set(e instanceof Error ? e.message : 'No se pudo activar la alerta.'); }
+    } catch (e) {
+      this.error.set(
+        e instanceof Error ? e.message : 'No se pudo activar la alerta.'
+      );
+    }
   }
 
   readonly peliculasFiltradas = computed(() => {
@@ -73,6 +96,12 @@ export class Cartelera implements OnInit {
       ]);
 
       this.peliculas.set(peliculas);
+      try {
+        this.destacadas.set(await this.peliculasService.obtenerTop3Vendidas());
+      } catch {
+        this.destacadas.set([]);
+      }
+
       const ahora = new Date();
       const peliculasPreventa = peliculas.filter((p) => {
         if (!p.preventa_activa || !p.fecha_estreno || p.precio_preventa == null) return false;
@@ -81,34 +110,34 @@ export class Cartelera implements OnInit {
         inicioPreventa.setDate(inicioPreventa.getDate() - 7);
         return ahora >= inicioPreventa && ahora < estreno;
       });
+
       this.preventa.set(peliculasPreventa);
-      this.proximamente.set(peliculas.filter(p => p.fecha_estreno && new Date(`${p.fecha_estreno}T00:00:00`) > ahora));
+      this.proximamente.set(
+        peliculas.filter(
+          p => p.fecha_estreno && new Date(`${p.fecha_estreno}T00:00:00`) > ahora
+        )
+      );
       this.generos.set(generos);
 
       const resenasPorPelicula = await Promise.all(
         peliculas.map(async (pelicula) => {
           const resenas = await this.peliculasService.obtenerResenas(pelicula.id);
-
           return [pelicula.id, resenas] as const;
         })
       );
-
       this.resenas.set(Object.fromEntries(resenasPorPelicula));
+
       const funcionesPorPelicula = await Promise.all(
         peliculas.map(async (pelicula) => {
           const funciones = await this.funcionesService.obtenerFunciones(pelicula.id);
-
           return [pelicula.id, funciones] as const;
-  })
-);
-
-this.funciones.set(Object.fromEntries(funcionesPorPelicula));
+        })
+      );
+      this.funciones.set(Object.fromEntries(funcionesPorPelicula));
     } catch (error: unknown) {
-      const mensaje =
-        error instanceof Error
-          ? error.message
-          : 'Error al cargar la cartelera.';
-
+      const mensaje = error instanceof Error
+        ? error.message
+        : 'Error al cargar la cartelera.';
       this.error.set(mensaje);
     } finally {
       this.cargando.set(false);

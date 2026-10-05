@@ -23,7 +23,7 @@ export class CompraService {
   agregarCandy(item: CandyItem): void {
     this.candy.update(actual => {
       const existente = actual.find(x => x.id === item.id);
-      if (existente) return actual.map(x => x.id === item.id ? { ...x, cantidad: Math.min(x.cantidad + 1, x.stock) } : x);
+      if (existente) return actual.map(x => x.id === item.id ? { ...x, cantidad: x.cantidad + 1 } : x);
       return [...actual, { ...item, cantidad: 1 }];
     });
   }
@@ -36,14 +36,8 @@ export class CompraService {
   }
   eliminarCandy(id: number): void { this.candy.update(actual => actual.filter(x => x.id !== id)); }
 
-  puedeAgregarCombo(combo: Combo): boolean {
-    return (combo.combo_items ?? []).every(item => {
-      const sueltos = this.candy().find(x => x.id === item.producto_id)?.cantidad ?? 0;
-      const enCombos = this.combos().reduce((total, actual) =>
-        total + (actual.combo_items?.find(x => x.producto_id === item.producto_id)?.cantidad ?? 0) * actual.cantidad, 0
-      );
-      return sueltos + enCombos + item.cantidad <= (item.producto?.stock ?? 0);
-    });
+  puedeAgregarCombo(_combo: Combo): boolean {
+    return true;
   }
 
   agregarCombo(combo: Combo): void {
@@ -84,7 +78,6 @@ export class CompraService {
           descripcion: null,
           precio: item.producto.precio,
           imagen_url: null,
-          stock: item.producto.stock,
           activo: true,
           cantidad
         });

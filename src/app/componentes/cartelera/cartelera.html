@@ -11,6 +11,38 @@
     </div>
   </div>
 
+
+  @if (destacadas().length) {
+    <section class="destacadas">
+      <div class="seccion-titulo">
+        <div>
+          <span>LAS MÁS ELEGIDAS</span>
+          <h2>Top 3 más vendidas</h2>
+        </div>
+        <small>Entradas vendidas</small>
+      </div>
+
+      <div class="top-peliculas">
+        @for (pelicula of destacadas(); track pelicula.id; let posicion = $index) {
+          <article class="top-pelicula" [routerLink]="['/pelicula', pelicula.id]">
+            <div class="top-numero">0{{ posicion + 1 }}</div>
+            <div class="top-poster">
+              @if (pelicula.url_poster) {
+                <img [src]="pelicula.url_poster" [alt]="pelicula.titulo" />
+              } @else {
+                <div class="poster-vacio">Sin póster</div>
+              }
+            </div>
+            <div class="top-info">
+              <h3>{{ pelicula.titulo }}</h3>
+              <span>{{ pelicula.entradas }} entradas vendidas</span>
+            </div>
+          </article>
+        }
+      </div>
+    </section>
+  }
+
   @if (preventa().length) {
     <section class="proximamente" style="margin:30px 0">
       <div class="seccion-titulo">
@@ -41,7 +73,38 @@
   }
 
   @if (proximamente().length) {
-    <section class="proximamente" style="margin:30px 0"><div class="seccion-titulo"><div><span>PRÓXIMAMENTE</span><h2>Próximos estrenos</h2></div></div><div class="peliculas">@for (pelicula of proximamente(); track pelicula.id) {<article class="pelicula"><div class="poster-wrap">@if (pelicula.url_poster) {<img [src]="pelicula.url_poster" [alt]="pelicula.titulo" loading="lazy" />}</div><div class="informacion"><div class="titulo-linea"><h2>{{pelicula.titulo}}</h2></div><p class="datos">Estreno: {{pelicula.fecha_estreno}}</p><p class="sinopsis">{{pelicula.sinopsis}}</p><button type="button" class="boton" (click)="activarAlerta(pelicula)">🔔 Avisarme cuando esté disponible</button></div></article>}</div></section>
+    <section class="proximamente" style="margin: 30px 0">
+      <div class="seccion-titulo">
+        <div>
+          <span>PRÓXIMAMENTE</span>
+          <h2>Próximos estrenos</h2>
+        </div>
+      </div>
+
+      <div class="peliculas">
+        @for (pelicula of proximamente(); track pelicula.id) {
+          <article class="pelicula">
+            <div class="poster-wrap">
+              @if (pelicula.url_poster) {
+                <img [src]="pelicula.url_poster" [alt]="pelicula.titulo" loading="lazy" />
+              } @else {
+                <div class="poster-vacio">Sin póster</div>
+              }
+            </div>
+            <div class="informacion">
+              <div class="titulo-linea">
+                <h2>{{ pelicula.titulo }}</h2>
+              </div>
+              <p class="datos">Estreno: {{ pelicula.fecha_estreno }}</p>
+              <p class="sinopsis">{{ pelicula.sinopsis }}</p>
+              <button type="button" class="boton" (click)="activarAlerta(pelicula)">
+                🔔 Avisarme cuando esté disponible
+              </button>
+            </div>
+          </article>
+        }
+      </div>
+    </section>
   }
 
   <div class="filtros">
@@ -146,6 +209,7 @@
                     <div class="funcion">
                       <span>{{ funcion.fecha }}</span>
                       <strong>{{ funcion.hora_inicio }}</strong>
+                      <span>{{ funcion.formato ?? '2D' }} · {{ funcion.idioma ?? 'Castellano' }}</span>
                       <span>${{ funcion.precio }}</span>
                     </div>
                   }

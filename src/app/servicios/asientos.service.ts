@@ -55,17 +55,6 @@ export class AsientosService {
       throw new Error('Uno de los asientos seleccionados ya fue ocupado. Volvé a elegir tus asientos.');
     }
 
-    for (const item of candy) {
-      const { data: producto, error } = await this.supabase.cliente
-        .from('candy_productos')
-        .select('id, stock, precio, activo')
-        .eq('id', item.id)
-        .single();
-      if (error) throw error;
-      if (!producto.activo || Number(producto.stock) < item.cantidad) {
-        throw new Error(`No hay stock suficiente de ${item.nombre}.`);
-      }
-    }
 
     const codigoQr = crypto.randomUUID();
 
@@ -118,21 +107,6 @@ export class AsientosService {
         throw productoVentaError;
       }
 
-      const { data: productoActual, error: stockError } = await this.supabase.cliente
-        .from('candy_productos')
-        .select('stock')
-        .eq('id', item.id)
-        .single();
-      if (stockError) throw stockError;
-
-      const nuevoStock = Number(productoActual.stock) - Number(item.cantidad);
-      if (nuevoStock < 0) throw new Error(`No hay stock suficiente de ${item.nombre}.`);
-
-      const { error: updateStockError } = await this.supabase.cliente
-        .from('candy_productos')
-        .update({ stock: nuevoStock })
-        .eq('id', item.id);
-      if (updateStockError) throw updateStockError;
     }
 
     return {

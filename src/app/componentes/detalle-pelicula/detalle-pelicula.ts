@@ -52,6 +52,11 @@ export class DetallePelicula implements OnInit {
 
       this.pelicula.set(pelicula);
       this.funciones.set(funciones);
+      try {
+        await this.peliculasService.registrarVista(id, this.auth.sesion()?.user.id ?? null);
+      } catch {
+        // Registrar una vista no debe impedir abrir la película.
+      }
       this.resenas.set(resenas);
 
       const usuarioId = this.auth.sesion()?.user.id;

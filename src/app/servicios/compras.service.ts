@@ -125,20 +125,6 @@ export class ComprasService {
       .eq('venta_id', ventaId);
     if (productosError) throw productosError;
 
-    for (const producto of productos ?? []) {
-      const { data: actual, error: stockError } = await this.supabase.cliente
-        .from('candy_productos')
-        .select('stock')
-        .eq('id', producto.producto_id)
-        .single();
-      if (stockError) throw stockError;
-
-      const { error: updateStockError } = await this.supabase.cliente
-        .from('candy_productos')
-        .update({ stock: Number(actual.stock) + Number(producto.cantidad) })
-        .eq('id', producto.producto_id);
-      if (updateStockError) throw updateStockError;
-    }
 
     const { error: ventaError } = await this.supabase.cliente
       .from('ventas')

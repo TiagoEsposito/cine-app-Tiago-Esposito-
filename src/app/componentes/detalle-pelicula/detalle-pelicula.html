@@ -142,7 +142,11 @@
                     <span>{{ funcion.fecha }}</span>
                     <strong>{{ funcion.hora_inicio }}</strong>
                   </div>
-                  <div class="sala"><span>Sala</span><strong>{{ funcion.sala_id }}</strong></div>
+                  <div class="sala">
+                    <span>Sala</span>
+                    <strong>{{ funcion.sala_id }}</strong>
+                    <small>{{ funcion.formato ?? '2D' }} · {{ funcion.idioma ?? 'Castellano' }}</small>
+                  </div>
                   <div class="precio"><span>Desde</span><strong>${{ funcion.precio }}</strong></div>
                   <a [routerLink]="['/funcion', funcion.id]" class="boton-funcion">Elegir</a>
                 </div>

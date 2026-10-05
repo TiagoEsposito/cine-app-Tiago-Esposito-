@@ -1,22 +1,141 @@
 <section class="resumen-compra-pagina">
   @if (!compra.tieneSeleccion()) {
-    <div class="estado"><h1>No hay una compra en curso</h1><p>Volvé a elegir una función para comenzar.</p><a routerLink="/cartelera" class="boton">Volver a cartelera</a></div>
+    <div class="estado">
+      <h1>No hay una compra en curso</h1>
+      <p>Volvé a elegir una función para comenzar.</p>
+      <a routerLink="/cartelera" class="boton">Volver a cartelera</a>
+    </div>
   } @else {
     <div class="encabezado">
-      <a [routerLink]="['/funcion', compra.funcion()!.id]" class="volver">← Volver a elegir asientos</a>
-      <p class="etiqueta">Tu compra</p><h1>Armá tu experiencia</h1><p>Revisá tus entradas y sumá algo del Candy Bar.</p>
+      <a [routerLink]="['/funcion', compra.funcion()!.id]" class="volver">
+        ← Volver a elegir asientos
+      </a>
+      <p class="etiqueta">Tu compra</p>
+      <h1>Armá tu experiencia</h1>
+      <p>Revisá tus entradas y sumá algo del Candy Bar.</p>
     </div>
+
     <div class="contenido">
-      <div class="pelicula"><div><h2>Función</h2><p>{{ compra.funcion()!.fecha }} · {{ compra.funcion()!.hora_inicio }}</p><p>Sala {{ compra.funcion()!.sala_id }}</p></div></div>
-      <div class="asientos"><h2>Asientos seleccionados</h2>
-        @for (asiento of compra.asientos(); track asiento.id) { <div class="asiento"><div><strong>{{ asiento.fila }}{{ asiento.numero }}</strong>@if (asiento.tipo === 'vip') {<span>VIP</span>} @else if (asiento.tipo === 'accesible') {<span>Accesible</span>}</div><strong>${{ obtenerPrecioAsiento(asiento) }}</strong></div> }
+      <div class="pelicula">
+        <div>
+          <h2>Función</h2>
+          <p>{{ compra.funcion()!.fecha }} · {{ compra.funcion()!.hora_inicio }}</p>
+          <p>Sala {{ compra.funcion()!.sala_id }}</p>
+          <p>{{ compra.funcion()!.formato ?? '2D' }} · {{ compra.funcion()!.idioma ?? 'Castellano' }}</p>
+        </div>
       </div>
-      <section class="combos" style="margin-bottom:24px"><div class="candy-cabecera"><div><span class="etiqueta">Combos</span><h2>Elegí un combo especial</h2></div><small>Precio fijo</small></div><div class="productos-candy">@for (combo of combos(); track combo.id) {<article class="producto-candy"><div><strong>{{ combo.nombre }}</strong><small>{{ combo.descripcion }}</small><b>${{ combo.precio }}</b></div><button type="button" (click)="compra.agregarCombo(combo)" [disabled]="!compra.puedeAgregarCombo(combo)">Agregar</button></article>}</div></section>
-      <section class="candy"><div class="candy-cabecera"><div><span class="etiqueta">Candy Bar</span><h2>Algo rico para la función</h2></div><small>Se retira con el mismo QR</small></div>
-        @if (cargandoCandy()) {<p>Cargando productos...</p>} @else if (errorCandy()) {<p>{{ errorCandy() }}</p>} @else {
-          <div class="categorias-candy"><button type="button" [class.activa]="categoriaSeleccionada() === null" (click)="categoriaSeleccionada.set(null)">Todos</button>@for (categoria of categorias(); track categoria.id) {<button type="button" [class.activa]="categoriaSeleccionada() === categoria.id" (click)="categoriaSeleccionada.set(categoria.id)">{{ categoria.nombre }}</button>}</div><div class="productos-candy">@for (producto of productosFiltrados(); track producto.id) {<article class="producto-candy"><div><strong>{{ producto.nombre }}</strong><small>{{ producto.descripcion }}</small><b>${{ producto.precio }}</b></div><div class="cantidad"><button type="button" (click)="compra.quitarCandy(producto.id)" [disabled]="cantidad(producto.id) === 0">−</button><span>{{ cantidad(producto.id) }}</span><button type="button" (click)="compra.agregarCandy({...producto, cantidad: 1})" [disabled]="cantidad(producto.id) >= producto.stock">+</button></div></article>}</div>
+
+      <div class="asientos">
+        <h2>Asientos seleccionados</h2>
+        @for (asiento of compra.asientos(); track asiento.id) {
+          <div class="asiento">
+            <div>
+              <strong>{{ asiento.fila }}{{ asiento.numero }}</strong>
+              @if (asiento.tipo === 'vip') {
+                <span>VIP</span>
+              } @else if (asiento.tipo === 'accesible') {
+                <span>Accesible</span>
+              }
+            </div>
+            <strong>${{ obtenerPrecioAsiento(asiento) }}</strong>
+          </div>
+        }
+      </div>
+
+      <section class="combos" style="margin-bottom: 24px">
+        <div class="candy-cabecera">
+          <div>
+            <span class="etiqueta">Combos</span>
+            <h2>Elegí un combo especial</h2>
+          </div>
+          <small>Precio fijo</small>
+        </div>
+
+        <div class="productos-candy">
+          @for (combo of combos(); track combo.id) {
+            <article class="producto-candy">
+              <div>
+                <strong>{{ combo.nombre }}</strong>
+                <small>{{ combo.descripcion }}</small>
+                <b>${{ combo.precio }}</b>
+              </div>
+              <button
+                type="button"
+                (click)="compra.agregarCombo(combo)"
+                [disabled]="!compra.puedeAgregarCombo(combo)"
+              >
+                Agregar
+              </button>
+            </article>
+          }
+        </div>
+      </section>
+
+      <section class="candy">
+        <div class="candy-cabecera">
+          <div>
+            <span class="etiqueta">Candy Bar</span>
+            <h2>Algo rico para la función</h2>
+          </div>
+          <small>Se retira con el mismo QR</small>
+        </div>
+
+        @if (cargandoCandy()) {
+          <p>Cargando productos...</p>
+        } @else if (errorCandy()) {
+          <p>{{ errorCandy() }}</p>
+        } @else {
+          <div class="categorias-candy">
+            <button
+              type="button"
+              [class.activa]="categoriaSeleccionada() === null"
+              (click)="categoriaSeleccionada.set(null)"
+            >
+              Todos
+            </button>
+
+            @for (categoria of categorias(); track categoria.id) {
+              <button
+                type="button"
+                [class.activa]="categoriaSeleccionada() === categoria.id"
+                (click)="categoriaSeleccionada.set(categoria.id)"
+              >
+                {{ categoria.nombre }}
+              </button>
+            }
+          </div>
+
+          <div class="productos-candy">
+            @for (producto of productosFiltrados(); track producto.id) {
+              <article class="producto-candy">
+                <div>
+                  <strong>{{ producto.nombre }}</strong>
+                  <small>{{ producto.descripcion }}</small>
+                  <b>${{ producto.precio }}</b>
+                </div>
+
+                <div class="cantidad">
+                  <button
+                    type="button"
+                    (click)="compra.quitarCandy(producto.id)"
+                    [disabled]="cantidad(producto.id) === 0"
+                  >
+                    −
+                  </button>
+                  <span>{{ cantidad(producto.id) }}</span>
+                  <button
+                    type="button"
+                    (click)="compra.agregarCandy({...producto, cantidad: 1})"
+                  >
+                    +
+                  </button>
+                </div>
+              </article>
+            }
+          </div>
         }
       </section>
+
       @if (compra.combos().length) {
         <div class="carrito">
           <h2>Combos seleccionados</h2>
@@ -25,15 +144,38 @@
               <span>{{ combo.cantidad }} × {{ combo.nombre }}</span>
               <div class="carrito-accion">
                 <strong>${{ combo.precio * combo.cantidad }}</strong>
-                <button type="button" (click)="compra.quitarCombo(combo.id)">Quitar</button>
+                <button type="button" (click)="compra.quitarCombo(combo.id)">
+                  Quitar
+                </button>
               </div>
             </div>
           }
         </div>
       }
-      @if (compra.candy().length) { <div class="carrito"><h2>Carrito Candy Bar</h2>@for (item of compra.candy(); track item.id) {<div><span>{{ item.cantidad }} × {{ item.nombre }}</span><strong>${{ item.precio * item.cantidad }}</strong></div>}</div> }
-      <div class="total"><span>Total a pagar</span><strong>${{ obtenerTotal() }}</strong></div>
-      <a [routerLink]="['/funcion', compra.funcion()!.id, 'pago']" class="boton continuar">Ir al pago</a>
+
+      @if (compra.candy().length) {
+        <div class="carrito">
+          <h2>Carrito Candy Bar</h2>
+          @for (item of compra.candy(); track item.id) {
+            <div>
+              <span>{{ item.cantidad }} × {{ item.nombre }}</span>
+              <strong>${{ item.precio * item.cantidad }}</strong>
+            </div>
+          }
+        </div>
+      }
+
+      <div class="total">
+        <span>Total a pagar</span>
+        <strong>${{ obtenerTotal() }}</strong>
+      </div>
+
+      <a
+        [routerLink]="['/funcion', compra.funcion()!.id, 'pago']"
+        class="boton continuar"
+      >
+        Ir al pago
+      </a>
     </div>
   }
 </section>

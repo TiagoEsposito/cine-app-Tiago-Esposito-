@@ -123,3 +123,36 @@
     grid-template-columns: 1fr;
   }
 }
+
+.form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  padding: 12px;
+  border: 1px solid #ded6ca;
+  border-radius: 12px;
+  background: #f9f6f0;
+  font: inherit;
+}
+.check {
+  display: flex !important;
+  align-items: center;
+  grid-template-columns: auto 1fr !important;
+  gap: 8px !important;
+}
+.check input {
+  width: auto;
+  min-height: auto;
+}
+.boton-secundario {
+  border: 1px solid #d8d0c3;
+  border-radius: 10px;
+  background: #f4f0e8;
+  color: #302e29;
+  padding: 9px 12px;
+  cursor: pointer;
+}
+.corta {
+  max-height: 270px;
+  overflow-y: auto;
+}

@@ -3,40 +3,69 @@ import { SupabaseService } from './supabase.service';
 import { Sala } from '../models/sala.model';
 import { Funcion } from '../models/funcion.model';
 import { Combo, Cupon, Recompensa } from '../models/beneficios.model';
+import { CandyCategoria, CandyProducto } from '../models/candy.model';
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
   private readonly supabase = inject(SupabaseService);
 
   async obtenerSalas(): Promise<Sala[]> {
-    const { data, error } = await this.supabase.cliente.from('salas').select('*').order('id');
+    const { data, error } = await this.supabase.cliente
+      .from('salas')
+      .select('*')
+      .order('id');
+
     if (error) throw error;
     return data ?? [];
   }
 
   async crearSala(nombre: string): Promise<Sala> {
-    const { data, error } = await this.supabase.cliente.from('salas').insert({ nombre }).select().single();
+    const { data, error } = await this.supabase.cliente
+      .from('salas')
+      .insert({ nombre })
+      .select()
+      .single();
+
     if (error) throw error;
     return data;
   }
 
   async generarAsientos(salaId: number): Promise<number> {
     const { data: existentes, error: existentesError } = await this.supabase.cliente
-      .from('asientos').select('fila,numero').eq('sala_id', salaId);
+      .from('asientos')
+      .select('fila,numero')
+      .eq('sala_id', salaId);
+
     if (existentesError) throw existentesError;
 
-    const clave = new Set((existentes ?? []).map((a: { fila: string; numero: number }) => `${a.fila}-${a.numero}`));
+    const clave = new Set(
+      (existentes ?? []).map(
+        (a: { fila: string; numero: number }) => `${a.fila}-${a.numero}`
+      )
+    );
+
     const filas = 'ABCDEFGHIJKLMNOPQRST'.split('');
-    const nuevos: { sala_id: number; fila: string; numero: number; tipo: 'normal' | 'accesible' | 'vip' }[] = [];
+    const nuevos: {
+      sala_id: number;
+      fila: string;
+      numero: number;
+      tipo: 'normal' | 'accesible' | 'vip';
+    }[] = [];
 
     for (const fila of filas) {
-      const numeros = fila === 'J' || fila === 'K'
-        ? [1, 2, 15, 16]
-        : Array.from({ length: 28 }, (_, i) => i + 1);
+      const numeros =
+        fila === 'J' || fila === 'K'
+          ? [1, 2, 15, 16]
+          : Array.from({ length: 28 }, (_, i) => i + 1);
+
       for (const numero of numeros) {
-        const tipo = fila === 'J' || fila === 'K'
-          ? 'accesible'
-          : ['R', 'S', 'T'].includes(fila) ? 'vip' : 'normal';
+        const tipo =
+          fila === 'J' || fila === 'K'
+            ? 'accesible'
+            : ['R', 'S', 'T'].includes(fila)
+              ? 'vip'
+              : 'normal';
+
         if (!clave.has(`${fila}-${numero}`)) {
           nuevos.push({ sala_id: salaId, fila, numero, tipo });
         }
@@ -44,13 +73,22 @@ export class AdminService {
     }
 
     if (!nuevos.length) return 0;
-    const { error } = await this.supabase.cliente.from('asientos').insert(nuevos);
+
+    const { error } = await this.supabase.cliente
+      .from('asientos')
+      .insert(nuevos);
+
     if (error) throw error;
     return nuevos.length;
   }
 
   async obtenerFunciones(): Promise<Funcion[]> {
-    const { data, error } = await this.supabase.cliente.from('funciones').select('*').order('fecha').order('hora_inicio');
+    const { data, error } = await this.supabase.cliente
+      .from('funciones')
+      .select('*')
+      .order('fecha')
+      .order('hora_inicio');
+
     if (error) throw error;
     return data ?? [];
   }
@@ -61,8 +99,14 @@ export class AdminService {
     horaInicio: string,
     horaFin: string,
     precio: number,
+    formato: '2D' | '3D' | '4D' | '5D' = '2D',
+    idioma: 'Castellano' | 'Subtitulada' = 'Castellano',
   ): Promise<number> {
-    const { data: salas, error: salasError } = await this.supabase.cliente.from('salas').select('id').order('id');
+    const { data: salas, error: salasError } = await this.supabase.cliente
+      .from('salas')
+      .select('id')
+      .order('id');
+
     if (salasError) throw salasError;
     if (!(salas ?? []).length) throw new Error('No hay salas creadas.');
 
@@ -70,14 +114,21 @@ export class AdminService {
       .from('funciones')
       .select('sala_id,hora_inicio,hora_fin')
       .eq('fecha', fecha);
+
     if (funcionesError) throw funcionesError;
 
     const inicioNuevo = this.minutos(horaInicio);
     const finNuevo = this.minutos(horaFin);
-    if (finNuevo <= inicioNuevo) throw new Error('La hora de fin debe ser posterior a la hora de inicio.');
+
+    if (finNuevo <= inicioNuevo) {
+      throw new Error('La hora de fin debe ser posterior a la hora de inicio.');
+    }
 
     const salasDisponibles = (salas ?? []).filter((sala: { id: number }) => {
-      const deSala = (funciones ?? []).filter((f: any) => Number(f.sala_id) === Number(sala.id));
+      const deSala = (funciones ?? []).filter(
+        (f: any) => Number(f.sala_id) === Number(sala.id)
+      );
+
       return deSala.every((f: any) => {
         const inicio = this.minutos(f.hora_inicio);
         const fin = this.minutos(f.hora_fin);
@@ -85,16 +136,22 @@ export class AdminService {
       });
     });
 
-    if (!salasDisponibles.length) throw new Error('No hay una sala disponible para ese horario.');
+    if (!salasDisponibles.length) {
+      throw new Error('No hay una sala disponible para ese horario.');
+    }
 
-    // Distribuimos las funciones entre las salas disponibles.
-    // Si varias están libres, usamos primero la que tenga menos funciones.
-    // Si hay empate, gana la de menor ID.
-    const salaLibre = salasDisponibles.sort((a: { id: number }, b: { id: number }) => {
-      const cantidadA = (funciones ?? []).filter((f: any) => Number(f.sala_id) === Number(a.id)).length;
-      const cantidadB = (funciones ?? []).filter((f: any) => Number(f.sala_id) === Number(b.id)).length;
-      return cantidadA - cantidadB || Number(a.id) - Number(b.id);
-    })[0];
+    const salaLibre = salasDisponibles.sort(
+      (a: { id: number }, b: { id: number }) => {
+        const cantidadA = (funciones ?? []).filter(
+          (f: any) => Number(f.sala_id) === Number(a.id)
+        ).length;
+        const cantidadB = (funciones ?? []).filter(
+          (f: any) => Number(f.sala_id) === Number(b.id)
+        ).length;
+
+        return cantidadA - cantidadB || Number(a.id) - Number(b.id);
+      }
+    )[0];
 
     const { data, error } = await this.supabase.cliente
       .from('funciones')
@@ -105,9 +162,12 @@ export class AdminService {
         hora_inicio: horaInicio,
         hora_fin: horaFin,
         precio,
+        formato,
+        idioma,
       })
       .select('id')
       .single();
+
     if (error) throw error;
     return Number(data.id);
   }
@@ -117,11 +177,179 @@ export class AdminService {
     return h * 60 + m;
   }
 
-  async obtenerCupones(): Promise<Cupon[]> { const { data, error } = await this.supabase.cliente.from('cupones').select('*').order('id', { ascending: false }); if (error) throw error; return data ?? []; }
-  async crearCupon(codigo: string, porcentaje: number, primera_compra: boolean, edad_minima: number): Promise<void> { const { error } = await this.supabase.cliente.from('cupones').insert({ codigo: codigo.toUpperCase(), porcentaje, primera_compra, edad_minima, activo: true }); if (error) throw error; }
-  async obtenerRecompensas(): Promise<Recompensa[]> { const { data, error } = await this.supabase.cliente.from('fidelizacion_recompensas').select('*').order('costo_puntos'); if (error) throw error; return data ?? []; }
-  async crearRecompensa(nombre: string, costo_puntos: number): Promise<void> { const { error } = await this.supabase.cliente.from('fidelizacion_recompensas').insert({ nombre, tipo: 'entrada', costo_puntos, activo: true }); if (error) throw error; }
-  async obtenerCombos(): Promise<Combo[]> { const { data, error } = await this.supabase.cliente.from('combos').select('*, combo_items(producto_id,cantidad,candy_productos(id,nombre,precio,stock))').order('id', { ascending: false }); if (error) throw error; return data ?? []; }
-  async crearCombo(nombre: string, precio: number, descripcion: string, items: { producto_id: number; cantidad: number }[]): Promise<void> { const { data, error } = await this.supabase.cliente.from('combos').insert({ nombre, precio, descripcion, activo: true }).select('id').single(); if (error) throw error; const { error: e } = await this.supabase.cliente.from('combo_items').insert(items.map(x => ({ ...x, combo_id: data.id }))); if (e) throw e; }
-  async configurarPreventa(peliculaId: number, activa: boolean, precio: number | null): Promise<void> { const { error } = await this.supabase.cliente.from('peliculas').update({ preventa_activa: activa, precio_preventa: precio }).eq('id', peliculaId); if (error) throw error; }
+  async obtenerCupones(): Promise<Cupon[]> {
+    const { data, error } = await this.supabase.cliente
+      .from('cupones')
+      .select('*')
+      .order('id', { ascending: false });
+
+    if (error) throw error;
+    return data ?? [];
+  }
+
+  async crearCupon(
+    codigo: string,
+    porcentaje: number,
+    primera_compra: boolean,
+    edad_minima: number
+  ): Promise<void> {
+    const { error } = await this.supabase.cliente
+      .from('cupones')
+      .insert({
+        codigo: codigo.toUpperCase(),
+        porcentaje,
+        primera_compra,
+        edad_minima,
+        activo: true,
+      });
+
+    if (error) throw error;
+  }
+
+  async obtenerRecompensas(): Promise<Recompensa[]> {
+    const { data, error } = await this.supabase.cliente
+      .from('fidelizacion_recompensas')
+      .select('*')
+      .order('costo_puntos');
+
+    if (error) throw error;
+    return data ?? [];
+  }
+
+  async crearRecompensa(nombre: string, costo_puntos: number): Promise<void> {
+    const { error } = await this.supabase.cliente
+      .from('fidelizacion_recompensas')
+      .insert({
+        nombre,
+        tipo: 'entrada',
+        costo_puntos,
+        activo: true,
+      });
+
+    if (error) throw error;
+  }
+
+  async obtenerCombos(): Promise<Combo[]> {
+    const { data, error } = await this.supabase.cliente
+      .from('combos')
+      .select(
+        '*, combo_items(producto_id,cantidad,candy_productos(id,nombre,precio))'
+      )
+      .order('id', { ascending: false });
+
+    if (error) throw error;
+    return data ?? [];
+  }
+
+  async crearCombo(
+    nombre: string,
+    precio: number,
+    descripcion: string,
+    items: { producto_id: number; cantidad: number }[]
+  ): Promise<void> {
+    const { data, error } = await this.supabase.cliente
+      .from('combos')
+      .insert({ nombre, precio, descripcion, activo: true })
+      .select('id')
+      .single();
+
+    if (error) throw error;
+
+    const { error: itemsError } = await this.supabase.cliente
+      .from('combo_items')
+      .insert(items.map(item => ({ ...item, combo_id: data.id })));
+
+    if (itemsError) throw itemsError;
+  }
+
+  async configurarPreventa(
+    peliculaId: number,
+    activa: boolean,
+    precio: number | null
+  ): Promise<void> {
+    const { error } = await this.supabase.cliente
+      .from('peliculas')
+      .update({ preventa_activa: activa, precio_preventa: precio })
+      .eq('id', peliculaId);
+
+    if (error) throw error;
+  }
+
+  async obtenerCategorias(): Promise<CandyCategoria[]> {
+    const { data, error } = await this.supabase.cliente
+      .from('candy_categorias')
+      .select('*')
+      .order('nombre');
+
+    if (error) throw error;
+    return data ?? [];
+  }
+
+  async obtenerProductos(): Promise<CandyProducto[]> {
+    const { data, error } = await this.supabase.cliente
+      .from('candy_productos')
+      .select('*')
+      .order('nombre');
+
+    if (error) throw error;
+    return data ?? [];
+  }
+
+  async crearCategoria(nombre: string): Promise<void> {
+    const { error } = await this.supabase.cliente
+      .from('candy_categorias')
+      .insert({ nombre, activa: true });
+
+    if (error) throw error;
+  }
+
+  async cambiarEstadoCategoria(id: number, activa: boolean): Promise<void> {
+    const { error } = await this.supabase.cliente
+      .from('candy_categorias')
+      .update({ activa: !activa })
+      .eq('id', id);
+
+    if (error) throw error;
+  }
+
+  async crearProducto(producto: {
+    categoria_id: number;
+    nombre: string;
+    descripcion: string | null;
+    precio: number;
+    imagen_url: string | null;
+  }): Promise<void> {
+    const { error } = await this.supabase.cliente
+      .from('candy_productos')
+      .insert({ ...producto, stock: 0, activo: true });
+
+    if (error) throw error;
+  }
+
+  async actualizarProducto(
+    id: number,
+    producto: {
+      categoria_id: number;
+      nombre: string;
+      descripcion: string | null;
+      precio: number;
+      imagen_url: string | null;
+    }
+  ): Promise<void> {
+    const { error } = await this.supabase.cliente
+      .from('candy_productos')
+      .update(producto)
+      .eq('id', id);
+
+    if (error) throw error;
+  }
+
+  async cambiarEstadoProducto(id: number, activo: boolean): Promise<void> {
+    const { error } = await this.supabase.cliente
+      .from('candy_productos')
+      .update({ activo: !activo })
+      .eq('id', id);
+
+    if (error) throw error;
+  }
 }

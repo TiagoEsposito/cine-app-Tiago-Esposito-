@@ -55,7 +55,7 @@ export class BeneficiosService {
 
       const { data: productos, error: productosError } = await this.supabase.cliente
         .from('candy_productos')
-        .select('id, nombre, precio, stock')
+        .select('id, nombre, precio')
         .in('id', ids);
 
       if (productosError) throw productosError;

@@ -10,7 +10,7 @@ export interface Cupon {
 export interface ComboItem {
   producto_id: number;
   cantidad: number;
-  producto?: { id: number; nombre: string; precio: number; stock: number };
+  producto?: { id: number; nombre: string; precio: number };
 }
 
 export interface Combo {

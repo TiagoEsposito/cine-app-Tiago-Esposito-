@@ -6,7 +6,6 @@ export interface CandyProducto {
   descripcion: string | null;
   precio: number;
   imagen_url: string | null;
-  stock: number;
   activo: boolean;
 }
 export interface CandyItem extends CandyProducto { cantidad: number; }
