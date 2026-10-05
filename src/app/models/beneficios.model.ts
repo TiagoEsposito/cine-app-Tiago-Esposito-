@@ -1,3 +1,6 @@
+/**
+ * Define los tipos de datos usados para cupones, recompensas y combos.
+ */
 export interface Cupon {
   id: number;
   codigo: string;
@@ -20,6 +23,7 @@ export interface Combo {
   precio: number;
   activo: boolean;
   destacado?: boolean;
+  incluye_entrada?: boolean;
   combo_items?: ComboItem[];
 }
 
@@ -31,4 +35,5 @@ export interface Recompensa {
   producto_id?: number | null;
   cantidad: number;
   activo: boolean;
+  producto?: { id: number; nombre: string; precio: number } | null;
 }

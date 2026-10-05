@@ -1,3 +1,6 @@
+/**
+ * Define la estructura de una película.
+ */
 export interface Genero {
   id: number;
   nombre: string;

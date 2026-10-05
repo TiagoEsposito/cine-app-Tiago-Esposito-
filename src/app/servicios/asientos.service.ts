@@ -1,4 +1,8 @@
+/**
+ * Implementa la lógica de asientos dentro de la aplicación Cine Avellaneda.
+ */
 import { inject, Injectable } from '@angular/core';
+import { RealtimeChannel } from '@supabase/supabase-js';
 import { SupabaseService } from './supabase.service';
 import { Asiento } from '../models/asiento.model';
 import { CandyItem } from '../models/candy.model';
@@ -7,6 +11,7 @@ import { CandyItem } from '../models/candy.model';
 export class AsientosService {
   private readonly supabase = inject(SupabaseService);
 
+  /** Obtiene todos los asientos de una sala ordenados por fila y número. */
   async obtenerAsientos(salaId: number): Promise<Asiento[]> {
     const { data, error } = await this.supabase.cliente
       .from('asientos')
@@ -18,6 +23,7 @@ export class AsientosService {
     return data ?? [];
   }
 
+  /** Obtiene los asientos que ya fueron vendidos para una función. */
   async obtenerAsientosOcupados(funcionId: number): Promise<number[]> {
     const { data: ventas, error: ventasError } = await this.supabase.cliente
       .from('ventas')
@@ -39,6 +45,29 @@ export class AsientosService {
     return (data ?? []).map((item: { asiento_id: number }) => Number(item.asiento_id));
   }
 
+  /** Se suscribe a cambios en tiempo real de los asientos vendidos y actualiza los ocupados. */
+  escucharAsientos(funcionId: number, actualizar: (ids: number[]) => void): RealtimeChannel {
+    const canal = this.supabase.cliente
+      .channel(`asientos-funcion-${funcionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'venta_asientos',
+          filter: `funcion_id=eq.${funcionId}`,
+        },
+        async () => {
+          const ocupados = await this.obtenerAsientosOcupados(funcionId);
+          actualizar(ocupados);
+        }
+      )
+      .subscribe();
+
+    return canal;
+  }
+
+  /** Valida la disponibilidad de asientos y crea la venta, sus asientos, productos y código QR. */
   async crearVenta(
     funcionId: number,
     usuarioId: string | null,
@@ -49,7 +78,6 @@ export class AsientosService {
   ): Promise<{ id: number; codigoQr: string; total: number }> {
     if (!asientoIds.length) throw new Error('Seleccioná al menos una butaca.');
 
-    // Última comprobación antes de crear la venta.
     const ocupados = await this.obtenerAsientosOcupados(funcionId);
     if (asientoIds.some(id => ocupados.includes(id))) {
       throw new Error('Uno de los asientos seleccionados ya fue ocupado. Volvé a elegir tus asientos.');

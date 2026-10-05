@@ -1,5 +1,9 @@
+/**
+ * Implementa la lógica de empleado dentro de la aplicación Cine Avellaneda.
+ */
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
+import { ActividadService } from './actividad.service';
 
 export interface VentaQr {
   id: number;
@@ -27,7 +31,9 @@ export interface VentaQr {
 @Injectable({ providedIn: 'root' })
 export class EmpleadoService {
   private readonly supabase = inject(SupabaseService);
+  private readonly actividad = inject(ActividadService);
 
+  /** Busca una venta utilizando el código QR presentado por el cliente. */
   async buscarPorQr(codigo: string): Promise<VentaQr> {
     const limpio = codigo.trim();
     if (!limpio) throw new Error('Ingresá un código QR.');
@@ -80,6 +86,7 @@ export class EmpleadoService {
     } as VentaQr;
   }
 
+  /** Valida el QR de una compra y registra el uso de la entrada o Candy Bar. */
   async validarQr(codigo: string): Promise<VentaQr> {
     const venta = await this.buscarPorQr(codigo);
     if (venta.estado !== 'pagada') throw new Error('La compra no está activa.');
@@ -119,6 +126,7 @@ export class EmpleadoService {
       .insert({ venta_id: venta.id, empleado_id: usuario.id, tipo: 'compra' });
 
     if (logError) throw logError;
+    await this.actividad.registrar('Validar QR', `Venta #${venta.id} · entrada y Candy: ${tieneCandy ? 'sí' : 'no'}`);
 
     return this.buscarPorQr(codigo);
   }

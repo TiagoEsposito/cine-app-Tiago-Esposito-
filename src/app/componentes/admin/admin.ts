@@ -1,4 +1,8 @@
+/**
+ * Implementa la lógica de admin dentro de la aplicación Cine Avellaneda.
+ */
 import { Component, inject, OnInit, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../servicios/admin.service';
 import { PeliculasService } from '../../servicios/peliculas.service';
@@ -8,12 +12,13 @@ import { Sala } from '../../models/sala.model';
 import { Funcion } from '../../models/funcion.model';
 import { Combo, Cupon, Recompensa } from '../../models/beneficios.model';
 import { CandyCategoria, CandyProducto } from '../../models/candy.model';
+import { Actividad } from '../../servicios/actividad.service';
 
 @Component({
   selector: 'app-admin',
   templateUrl: './admin.html',
   styleUrl: './admin.scss',
-  imports: [FormsModule],
+  imports: [FormsModule, DatePipe],
 })
 export class Admin implements OnInit {
   private readonly admin = inject(AdminService);
@@ -57,6 +62,9 @@ export class Admin implements OnInit {
   edadMinima = 0;
 
   recompensaNombre = 'Entrada gratis';
+  recompensaTipo: 'entrada' | 'candy' = 'entrada';
+  recompensaProductoId = 0;
+  recompensaCantidad = 1;
   costoPuntos = 500;
 
   comboNombre = 'Combo Cine';
@@ -68,6 +76,7 @@ export class Admin implements OnInit {
   comboCantidad2 = 1;
   comboProductoId3 = 0;
   comboCantidad3 = 1;
+  comboIncluyeEntrada = true;
 
   preventaPrecio = 0;
   preventaPelicula = 0;
@@ -81,7 +90,9 @@ export class Admin implements OnInit {
   productoCategoriaId = 0;
   productoImagen = '';
   productoActivo = true;
+  readonly actividad = signal<Actividad[]>([]);
 
+  /** Inicializa el componente y carga los datos necesarios al entrar en la pantalla. */
   async ngOnInit() {
     try {
       await this.recargar();
@@ -90,25 +101,30 @@ export class Admin implements OnInit {
       this.cupones.set(await this.admin.obtenerCupones());
       this.recompensas.set(await this.admin.obtenerRecompensas());
       this.combos.set(await this.admin.obtenerCombos());
+      this.actividad.set(await this.admin.obtenerActividad());
     } catch (e) {
       this.error.set(e instanceof Error ? e.message : 'No se pudo cargar el panel.');
     }
   }
 
+  /** Vuelve a cargar todos los datos utilizados por el panel de administración. */
   async recargar() {
     this.salas.set(await this.admin.obtenerSalas());
     this.funciones.set(await this.admin.obtenerFunciones());
   }
 
+  /** Recarga la lista de películas del panel de administración. */
   async recargarPeliculas() {
     this.peliculas.set(await this.peliculasService.obtenerPeliculas(false));
   }
 
+  /** Recarga categorías y productos del Candy Bar. */
   async recargarCandy() {
     this.productos.set(await this.admin.obtenerProductos());
     this.categorias.set(await this.admin.obtenerCategorias());
   }
 
+  /** Crea una nueva sala de cine. */
   async crearSala() {
     if (!this.nuevaSala.trim()) return;
 
@@ -122,6 +138,7 @@ export class Admin implements OnInit {
     }
   }
 
+  /** Genera los asientos de una sala según su distribución y tipo. */
   async generarAsientos(sala: Sala) {
     this.salaEnProceso.set(sala.id);
     this.error.set('');
@@ -136,6 +153,7 @@ export class Admin implements OnInit {
     }
   }
 
+  /** Valida los datos y crea una nueva función cinematográfica. */
   async crearFuncion() {
     this.error.set('');
     this.mensaje.set('');
@@ -160,6 +178,7 @@ export class Admin implements OnInit {
     }
   }
 
+  /** Selecciona una película para editarla en el formulario de administración. */
   seleccionarPelicula() {
     const pelicula = this.peliculas().find(p => p.id === this.peliculaEdicionId);
     if (!pelicula) return;
@@ -173,6 +192,7 @@ export class Admin implements OnInit {
     this.peliculaActiva = pelicula.activa;
   }
 
+  /** Crea o actualiza una película según el estado del formulario. */
   async guardarPelicula() {
     if (!this.peliculaEdicionId || !this.peliculaTituloEdit.trim()) return;
 
@@ -194,6 +214,7 @@ export class Admin implements OnInit {
     }
   }
 
+  /** Selecciona un producto para editarlo. */
   seleccionarProducto() {
     const producto = this.productos().find(p => p.id === this.productoEdicionId);
     if (!producto) return;
@@ -206,6 +227,7 @@ export class Admin implements OnInit {
     this.productoActivo = producto.activo;
   }
 
+  /** Limpia el formulario de producto para crear uno nuevo. */
   limpiarProducto() {
     this.productoEdicionId = 0;
     this.productoNombre = '';
@@ -216,6 +238,7 @@ export class Admin implements OnInit {
     this.productoActivo = true;
   }
 
+  /** Crea o actualiza un producto del Candy Bar. */
   async guardarProducto() {
     if (!this.productoNombre.trim() || !this.productoCategoriaId) return;
 
@@ -243,6 +266,7 @@ export class Admin implements OnInit {
     }
   }
 
+  /** Activa o desactiva un producto del Candy Bar. */
   async cambiarEstadoProducto(producto: CandyProducto) {
     try {
       await this.admin.cambiarEstadoProducto(producto.id, producto.activo);
@@ -253,6 +277,7 @@ export class Admin implements OnInit {
     }
   }
 
+  /** Crea una categoría desde el panel de administración. */
   async crearCategoria() {
     if (!this.nuevaCategoria.trim()) return;
 
@@ -266,6 +291,7 @@ export class Admin implements OnInit {
     }
   }
 
+  /** Activa o desactiva una categoría de productos. */
   async cambiarEstadoCategoria(categoria: CandyCategoria) {
     try {
       await this.admin.cambiarEstadoCategoria(categoria.id, categoria.activa);
@@ -276,6 +302,7 @@ export class Admin implements OnInit {
     }
   }
 
+  /** Crea un cupón desde el panel de administración. */
   async crearCupon() {
     try {
       await this.admin.crearCupon(
@@ -292,16 +319,28 @@ export class Admin implements OnInit {
     }
   }
 
+  /** Crea una recompensa desde el panel de administración. */
   async crearRecompensa() {
     try {
-      await this.admin.crearRecompensa(this.recompensaNombre, this.costoPuntos);
+      if (this.recompensaTipo === 'candy' && !this.recompensaProductoId) return;
+
+      await this.admin.crearRecompensa(
+        this.recompensaNombre,
+        this.recompensaTipo,
+        this.costoPuntos,
+        this.recompensaTipo === 'candy' ? this.recompensaProductoId : null,
+        this.recompensaCantidad
+      );
+
       this.mensaje.set('Recompensa creada.');
       this.recompensas.set(await this.admin.obtenerRecompensas());
+      this.actividad.set(await this.admin.obtenerActividad());
     } catch (e) {
       this.error.set(e instanceof Error ? e.message : 'No se pudo crear la recompensa.');
     }
   }
 
+  /** Crea un combo y sus productos desde el panel de administración. */
   async crearCombo() {
     try {
       if (!this.comboProductoId) return;
@@ -312,20 +351,27 @@ export class Admin implements OnInit {
         { producto_id: this.comboProductoId3, cantidad: this.comboCantidad3 },
       ].filter(x => x.producto_id > 0);
 
+      if (this.comboIncluyeEntrada && items.length < 2) {
+        throw new Error('Un combo con entrada debe incluir al menos dos productos del Candy Bar.');
+      }
+
       await this.admin.crearCombo(
         this.comboNombre,
         this.comboPrecio,
         this.comboDescripcion,
-        items
+        items,
+        this.comboIncluyeEntrada
       );
 
       this.mensaje.set('Combo creado.');
       this.combos.set(await this.admin.obtenerCombos());
+      this.actividad.set(await this.admin.obtenerActividad());
     } catch (e) {
       this.error.set(e instanceof Error ? e.message : 'No se pudo crear el combo.');
     }
   }
 
+  /** Guarda la configuración de preventa de una película desde el panel. */
   async guardarPreventa() {
     try {
       await this.admin.configurarPreventa(
@@ -335,11 +381,13 @@ export class Admin implements OnInit {
       );
       this.mensaje.set('Preventa actualizada.');
       await this.recargarPeliculas();
+      this.actividad.set(await this.admin.obtenerActividad());
     } catch (e) {
       this.error.set(e instanceof Error ? e.message : 'No se pudo actualizar la preventa.');
     }
   }
 
+  /** Obtiene el título de una película a partir de su ID. */
   peliculaTitulo(id: number) {
     return this.peliculas().find(p => p.id === id)?.titulo ?? `Película #${id}`;
   }

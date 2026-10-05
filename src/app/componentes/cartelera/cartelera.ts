@@ -1,3 +1,6 @@
+/**
+ * Implementa la lógica de cartelera dentro de la aplicación Cine Avellaneda.
+ */
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { Pelicula } from '../../models/pelicula.model';
 import { PeliculasService } from '../../servicios/peliculas.service';
@@ -44,6 +47,7 @@ export class Cartelera implements OnInit {
     entradas: number;
   }[]>([]);
 
+  /** Activa una alerta de estreno para una película. */
   async activarAlerta(pelicula: Pelicula): Promise<void> {
     const usuario = this.auth.perfil();
     if (!usuario) {
@@ -88,6 +92,7 @@ export class Cartelera implements OnInit {
     });
   });
 
+  /** Inicializa el componente y carga los datos necesarios al entrar en la pantalla. */
   async ngOnInit(): Promise<void> {
     try {
       const [peliculas, generos] = await Promise.all([
@@ -161,6 +166,7 @@ readonly promedios = computed(() => {
 
   return resultado;
 });
+/** Valida y publica una reseña escrita por el usuario. */
 async publicarResena(peliculaId: number): Promise<void> {
   const usuarioId = this.auth.sesion()?.user.id;
   const puntuacion = this.puntuacionSeleccionada();

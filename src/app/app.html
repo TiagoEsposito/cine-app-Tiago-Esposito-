@@ -1,3 +1,4 @@
+<!-- Plantilla de la pantalla/sección de app de Cine Avellaneda. -->
 <header class="barra">
   <div class="barra-interior">
     <a routerLink="/cartelera" class="marca" aria-label="Cine Avellaneda - inicio">
@@ -16,6 +17,7 @@
         @if (auth.esStaff()) { <a routerLink="/empleado" routerLinkActive="activo">Empleado</a> }
         @if (auth.esAdmin()) { <a routerLink="/admin" routerLinkActive="activo">Admin</a> <a routerLink="/reportes" routerLinkActive="activo">Reportes</a> }
       } @else {
+        <a routerLink="/login" routerLinkActive="activo">Iniciar sesión</a>
         <a routerLink="/registro" routerLinkActive="activo">Crear cuenta</a>
       }
     </nav>

@@ -1,8 +1,13 @@
+<!-- Plantilla de la pantalla/sección de reportes de Cine Avellaneda. -->
 <section class="reportes-pagina">
   <div class="encabezado">
     <p class="etiqueta">Administración</p>
     <h1>Reportes</h1>
     <p>Resumen de ventas, vistas y productos a partir de la actividad del cine.</p>
+    <div class="acciones-reportes">
+      <button type="button" (click)="exportarPdf()">Exportar PDF</button>
+      <button type="button" (click)="exportarExcel()">Exportar Excel</button>
+    </div>
   </div>
 
   @if (error()) {

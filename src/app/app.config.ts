@@ -1,3 +1,6 @@
+/**
+ * Configura proveedores globales de Angular, router, manejo de errores y PWA.
+ */
 import { ApplicationConfig, isDevMode, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideServiceWorker } from '@angular/service-worker';

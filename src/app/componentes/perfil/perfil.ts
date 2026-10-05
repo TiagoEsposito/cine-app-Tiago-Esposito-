@@ -1,3 +1,6 @@
+/**
+ * Implementa la lógica de perfil dentro de la aplicación Cine Avellaneda.
+ */
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
@@ -40,6 +43,7 @@ export class PerfilComponent implements OnInit {
   readonly tiposSangre = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
   readonly coloresOjos = ['Marrones', 'Negros', 'Azules', 'Verdes', 'Celestes', 'Grises', 'Avellana'];
 
+  /** Inicializa el componente y carga los datos necesarios al entrar en la pantalla. */
   async ngOnInit(): Promise<void> {
     await this.auth.listo;
     this.cargarFormulario();
@@ -61,6 +65,7 @@ export class PerfilComponent implements OnInit {
     }
   }
 
+  /** Carga los datos del perfil actual dentro del formulario de edición. */
   cargarFormulario(): void {
     const perfil = this.auth.perfil();
     if (!perfil) return;
@@ -72,6 +77,7 @@ export class PerfilComponent implements OnInit {
     this.diasVacaciones.set(String(perfil.dias_vacaciones ?? ''));
   }
 
+  /** Activa el modo de edición del perfil. */
   empezarEdicion(): void {
     this.cargarFormulario();
     this.mensaje.set(null);
@@ -79,11 +85,13 @@ export class PerfilComponent implements OnInit {
     this.editando.set(true);
   }
 
+  /** Cancela la edición y restaura los datos originales del perfil. */
   cancelarEdicion(): void {
     this.cargarFormulario();
     this.editando.set(false);
   }
 
+  /** Valida y guarda los cambios realizados en el perfil. */
   async guardarPerfil(): Promise<void> {
     this.guardando.set(true);
     this.error.set(null);
@@ -115,10 +123,12 @@ export class PerfilComponent implements OnInit {
     this.guardando.set(false);
   }
 
+  /** Comprueba si una compra todavía puede cancelarse según el límite de tiempo. */
   puedeCancelar(compra: CompraHistorial): boolean {
     return this.comprasService.puedeCancelar(compra);
   }
 
+  /** Solicita la cancelación de una compra y actualiza el perfil con el crédito devuelto. */
   async cancelarCompra(compra: CompraHistorial): Promise<void> {
     if (!this.puedeCancelar(compra)) return;
     if (!window.confirm(`¿Querés cancelar la compra #${compra.id}? El importe se acreditará en tu cuenta.`)) return;
@@ -136,6 +146,7 @@ export class PerfilComponent implements OnInit {
     }
   }
 
+  /** Canjea la recompensa seleccionada usando los puntos disponibles. */
   async canjear(recompensa: Recompensa): Promise<void> {
     this.mensajeCanje.set(null);
     try {
@@ -147,6 +158,7 @@ export class PerfilComponent implements OnInit {
     } catch (e) { this.mensajeCanje.set(e instanceof Error ? e.message : 'No se pudo realizar el canje.'); }
   }
 
+  /** Copia al portapapeles el código de una recompensa canjeada. */
   async copiarCodigo(codigo: string): Promise<void> {
     if (!codigo || codigo === '—') return;
 
@@ -158,16 +170,19 @@ export class PerfilComponent implements OnInit {
     }
   }
 
+  /** Cierra la sesión y redirige al usuario fuera de su perfil. */
   async cerrarSesion(): Promise<void> {
     await this.auth.cerrarSesion();
     await this.router.navigate(['/cartelera']);
   }
 
+  /** Formatea una fecha para mostrarla de forma legible. */
   formatearFecha(fecha: string | null | undefined): string {
     if (!fecha) return '—';
     return new Intl.DateTimeFormat('es-AR', { dateStyle: 'medium' }).format(new Date(`${fecha}T12:00:00`));
   }
 
+  /** Formatea una fecha y hora para mostrarla en pantalla. */
   formatearFechaHora(fecha: string): string {
     return new Intl.DateTimeFormat('es-AR', {
       dateStyle: 'medium',
@@ -175,6 +190,7 @@ export class PerfilComponent implements OnInit {
     }).format(new Date(fecha));
   }
 
+  /** Formatea un número como importe monetario. */
   formatearDinero(valor: number): string {
     return new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(valor);
   }

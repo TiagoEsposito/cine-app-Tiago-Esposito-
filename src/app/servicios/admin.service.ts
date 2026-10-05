@@ -1,14 +1,20 @@
+/**
+ * Implementa la lógica de admin dentro de la aplicación Cine Avellaneda.
+ */
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { Sala } from '../models/sala.model';
 import { Funcion } from '../models/funcion.model';
 import { Combo, Cupon, Recompensa } from '../models/beneficios.model';
 import { CandyCategoria, CandyProducto } from '../models/candy.model';
+import { ActividadService } from './actividad.service';
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
   private readonly supabase = inject(SupabaseService);
+  private readonly actividad = inject(ActividadService);
 
+  /** Obtiene las salas disponibles del cine. */
   async obtenerSalas(): Promise<Sala[]> {
     const { data, error } = await this.supabase.cliente
       .from('salas')
@@ -19,6 +25,7 @@ export class AdminService {
     return data ?? [];
   }
 
+  /** Crea una nueva sala de cine. */
   async crearSala(nombre: string): Promise<Sala> {
     const { data, error } = await this.supabase.cliente
       .from('salas')
@@ -27,9 +34,11 @@ export class AdminService {
       .single();
 
     if (error) throw error;
+    await this.actividad.registrar('Crear sala', `Sala: ${nombre}`);
     return data;
   }
 
+  /** Genera los asientos de una sala según su distribución y tipo. */
   async generarAsientos(salaId: number): Promise<number> {
     const { data: existentes, error: existentesError } = await this.supabase.cliente
       .from('asientos')
@@ -79,9 +88,11 @@ export class AdminService {
       .insert(nuevos);
 
     if (error) throw error;
+    await this.actividad.registrar('Generar butacas', `Sala #${salaId}: ${nuevos.length} butacas`);
     return nuevos.length;
   }
 
+  /** Obtiene las funciones existentes, incluyendo sus películas y salas relacionadas. */
   async obtenerFunciones(): Promise<Funcion[]> {
     const { data, error } = await this.supabase.cliente
       .from('funciones')
@@ -93,6 +104,7 @@ export class AdminService {
     return data ?? [];
   }
 
+  /** Crea una función asignando automáticamente una sala disponible y respetando los horarios. */
   async crearFuncionAuto(
     peliculaId: number,
     fecha: string,
@@ -169,14 +181,17 @@ export class AdminService {
       .single();
 
     if (error) throw error;
+    await this.actividad.registrar('Crear función', `Película #${peliculaId}, sala #${salaLibre.id}, ${fecha} ${horaInicio}, precio $${precio}`);
     return Number(data.id);
   }
 
+  /** Convierte una hora en minutos para poder comparar horarios. */
   private minutos(hora: string): number {
     const [h, m] = String(hora).slice(0, 5).split(':').map(Number);
     return h * 60 + m;
   }
 
+  /** Obtiene los cupones configurados en el sistema. */
   async obtenerCupones(): Promise<Cupon[]> {
     const { data, error } = await this.supabase.cliente
       .from('cupones')
@@ -187,6 +202,7 @@ export class AdminService {
     return data ?? [];
   }
 
+  /** Crea un cupón desde el panel de administración. */
   async crearCupon(
     codigo: string,
     porcentaje: number,
@@ -204,8 +220,10 @@ export class AdminService {
       });
 
     if (error) throw error;
+    await this.actividad.registrar('Crear cupón', `Cupón ${codigo.toUpperCase()} · ${porcentaje}%`);
   }
 
+  /** Obtiene las recompensas disponibles para el sistema de fidelización. */
   async obtenerRecompensas(): Promise<Recompensa[]> {
     const { data, error } = await this.supabase.cliente
       .from('fidelizacion_recompensas')
@@ -216,19 +234,33 @@ export class AdminService {
     return data ?? [];
   }
 
-  async crearRecompensa(nombre: string, costo_puntos: number): Promise<void> {
+  /** Crea una recompensa desde el panel de administración. */
+  async crearRecompensa(
+    nombre: string,
+    tipo: 'entrada' | 'candy',
+    costo_puntos: number,
+    producto_id: number | null,
+    cantidad: number
+  ): Promise<void> {
     const { error } = await this.supabase.cliente
       .from('fidelizacion_recompensas')
       .insert({
         nombre,
-        tipo: 'entrada',
+        tipo,
         costo_puntos,
+        producto_id: tipo === 'candy' ? producto_id : null,
+        cantidad,
         activo: true,
       });
 
     if (error) throw error;
+    await this.actividad.registrar(
+      'Crear recompensa',
+      `${nombre} · ${tipo} · ${costo_puntos} puntos`
+    );
   }
 
+  /** Obtiene los combos disponibles junto con sus productos incluidos. */
   async obtenerCombos(): Promise<Combo[]> {
     const { data, error } = await this.supabase.cliente
       .from('combos')
@@ -241,15 +273,17 @@ export class AdminService {
     return data ?? [];
   }
 
+  /** Crea un combo y sus productos desde el panel de administración. */
   async crearCombo(
     nombre: string,
     precio: number,
     descripcion: string,
-    items: { producto_id: number; cantidad: number }[]
+    items: { producto_id: number; cantidad: number }[],
+    incluyeEntrada = true
   ): Promise<void> {
     const { data, error } = await this.supabase.cliente
       .from('combos')
-      .insert({ nombre, precio, descripcion, activo: true })
+      .insert({ nombre, precio, descripcion, activo: true, incluye_entrada: incluyeEntrada })
       .select('id')
       .single();
 
@@ -260,8 +294,10 @@ export class AdminService {
       .insert(items.map(item => ({ ...item, combo_id: data.id })));
 
     if (itemsError) throw itemsError;
+    await this.actividad.registrar('Crear combo', `${nombre} · $${precio} · entrada incluida: ${incluyeEntrada ? 'sí' : 'no'}`);
   }
 
+  /** Guarda la configuración de preventa de una película. */
   async configurarPreventa(
     peliculaId: number,
     activa: boolean,
@@ -273,8 +309,10 @@ export class AdminService {
       .eq('id', peliculaId);
 
     if (error) throw error;
+    await this.actividad.registrar('Modificar precio', `Preventa película #${peliculaId}: $${precio ?? 0}`);
   }
 
+  /** Obtiene las categorías del Candy Bar. */
   async obtenerCategorias(): Promise<CandyCategoria[]> {
     const { data, error } = await this.supabase.cliente
       .from('candy_categorias')
@@ -285,6 +323,7 @@ export class AdminService {
     return data ?? [];
   }
 
+  /** Obtiene los productos del Candy Bar. */
   async obtenerProductos(): Promise<CandyProducto[]> {
     const { data, error } = await this.supabase.cliente
       .from('candy_productos')
@@ -295,14 +334,17 @@ export class AdminService {
     return data ?? [];
   }
 
+  /** Crea una categoría desde el panel de administración. */
   async crearCategoria(nombre: string): Promise<void> {
     const { error } = await this.supabase.cliente
       .from('candy_categorias')
       .insert({ nombre, activa: true });
 
     if (error) throw error;
+    await this.actividad.registrar('Crear categoría', `Categoría: ${nombre}`);
   }
 
+  /** Activa o desactiva una categoría de productos. */
   async cambiarEstadoCategoria(id: number, activa: boolean): Promise<void> {
     const { error } = await this.supabase.cliente
       .from('candy_categorias')
@@ -310,8 +352,10 @@ export class AdminService {
       .eq('id', id);
 
     if (error) throw error;
+    await this.actividad.registrar('Modificar categoría', `Categoría #${id}: ${activa ? 'desactivar' : 'activar'}`);
   }
 
+  /** Crea un nuevo producto del Candy Bar. */
   async crearProducto(producto: {
     categoria_id: number;
     nombre: string;
@@ -324,8 +368,10 @@ export class AdminService {
       .insert({ ...producto, stock: 0, activo: true });
 
     if (error) throw error;
+    await this.actividad.registrar('Crear producto', `Producto: ${producto.nombre} · $${producto.precio}`);
   }
 
+  /** Actualiza los datos de un producto del Candy Bar. */
   async actualizarProducto(
     id: number,
     producto: {
@@ -342,8 +388,10 @@ export class AdminService {
       .eq('id', id);
 
     if (error) throw error;
+    await this.actividad.registrar('Modificar precio', `Producto #${id}: $${producto.precio}`);
   }
 
+  /** Activa o desactiva un producto del Candy Bar. */
   async cambiarEstadoProducto(id: number, activo: boolean): Promise<void> {
     const { error } = await this.supabase.cliente
       .from('candy_productos')
@@ -351,5 +399,11 @@ export class AdminService {
       .eq('id', id);
 
     if (error) throw error;
+    await this.actividad.registrar('Modificar producto', `Producto #${id}: ${activo ? 'desactivar' : 'activar'}`);
   }
+  /** Obtiene el registro de actividad para mostrarlo en administración. */
+  async obtenerActividad() {
+    return this.actividad.obtener();
+  }
+
 }

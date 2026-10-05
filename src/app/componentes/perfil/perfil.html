@@ -1,3 +1,4 @@
+<!-- Plantilla de la pantalla/sección de perfil de Cine Avellaneda. -->
 <section class="perfil-pagina">
   <div class="encabezado-perfil">
     <div>
@@ -251,7 +252,12 @@
         <article class="compra recompensa-item">
           <div>
             <strong>{{ recompensa.nombre }}</strong>
-            <p>{{ recompensa.costo_puntos }} puntos</p>
+            <p>
+              {{ recompensa.costo_puntos }} puntos
+              @if (recompensa.tipo === 'candy' && recompensa.producto) {
+                · {{ recompensa.cantidad }} × {{ recompensa.producto.nombre }}
+              }
+            </p>
           </div>
           <button
             type="button"

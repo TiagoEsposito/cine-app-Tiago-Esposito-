@@ -1,3 +1,6 @@
+/**
+ * Implementa la lógica de mis peliculas dentro de la aplicación Cine Avellaneda.
+ */
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../servicios/auth.service';
@@ -21,6 +24,7 @@ export class MisPeliculas implements OnInit {
   readonly error = signal<string | null>(null);
   readonly misPuntuaciones = signal<Map<number, number>>(new Map());
 
+  /** Inicializa el componente y carga los datos necesarios al entrar en la pantalla. */
   async ngOnInit(): Promise<void> {
     await this.auth.listo;
     const usuarioId = this.auth.perfil()?.id;
@@ -48,10 +52,12 @@ export class MisPeliculas implements OnInit {
     }
   }
 
+  /** Formatea una fecha para mostrarla de forma legible. */
   formatearFecha(fecha: string): string {
     return new Intl.DateTimeFormat('es-AR', { dateStyle: 'medium' }).format(new Date(`${fecha}T12:00:00`));
   }
 
+  /** Obtiene todos los asientos de una sala ordenados por fila y número. */
   obtenerAsientos(compra: CompraHistorial): string {
     return compra.asientos.map((asiento) => `${asiento.fila}${asiento.numero}`).join(', ');
   }

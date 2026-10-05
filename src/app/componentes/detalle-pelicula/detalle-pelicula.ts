@@ -1,3 +1,6 @@
+/**
+ * Implementa la lógica de detalle pelicula dentro de la aplicación Cine Avellaneda.
+ */
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -37,6 +40,7 @@ export class DetallePelicula implements OnInit {
     return lista.reduce((suma, resena) => suma + resena.puntuacion, 0) / lista.length;
   });
 
+  /** Inicializa el componente y carga los datos necesarios al entrar en la pantalla. */
   async ngOnInit(): Promise<void> {
     try {
       const id = Number(this.route.snapshot.paramMap.get('id'));
@@ -74,10 +78,12 @@ export class DetallePelicula implements OnInit {
     }
   }
 
+  /** Selecciona la cantidad de estrellas para una reseña. */
   seleccionarPuntuacion(valor: number): void {
     this.puntuacionSeleccionada.set(valor);
   }
 
+  /** Valida y publica una reseña escrita por el usuario. */
   async publicarResena(): Promise<void> {
     const pelicula = this.pelicula();
     const usuarioId = this.auth.sesion()?.user.id;

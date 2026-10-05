@@ -1,3 +1,4 @@
+<!-- Plantilla de la pantalla/sección de resumen compra de Cine Avellaneda. -->
 <section class="resumen-compra-pagina">
   @if (!compra.tieneSeleccion()) {
     <div class="estado">
@@ -57,6 +58,7 @@
               <div>
                 <strong>{{ combo.nombre }}</strong>
                 <small>{{ combo.descripcion }}</small>
+                @if (combo.incluye_entrada) { <small>Incluye 1 entrada</small> }
                 <b>${{ combo.precio }}</b>
               </div>
               <button

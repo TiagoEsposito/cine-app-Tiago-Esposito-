@@ -1,0 +1,43 @@
+<!-- Plantilla de la pantalla/sección de login de Cine Avellaneda. -->
+<section class="login">
+  <h1>Iniciar sesión</h1>
+  <p>Ingresá a tu cuenta para acceder a tus compras y beneficios.</p>
+
+  <form [formRoot]="formulario">
+    <label>
+      Email
+      <input type="email" [formField]="formulario.email" autocomplete="email" />
+    </label>
+    @if (formulario.email().touched() && formulario.email().invalid()) {
+      <ul class="errores">
+        @for (error of formulario.email().errors(); track error) {
+          <li>{{ error.message }}</li>
+        }
+      </ul>
+    }
+
+    <label>
+      Contraseña
+      <input type="password" [formField]="formulario.password" autocomplete="current-password" />
+    </label>
+    @if (formulario.password().touched() && formulario.password().invalid()) {
+      <ul class="errores">
+        @for (error of formulario.password().errors(); track error) {
+          <li>{{ error.message }}</li>
+        }
+      </ul>
+    }
+
+    @if (formulario().errors().length > 0) {
+      <p class="error-general">{{ formulario().errors()[0].message }}</p>
+    }
+
+    <button type="submit" [disabled]="formulario().submitting()">
+      @if (formulario().submitting()) {
+        Iniciando sesión...
+      } @else {
+        Iniciar sesión
+      }
+    </button>
+  </form>
+</section>

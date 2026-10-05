@@ -1,3 +1,6 @@
+/**
+ * Pruebas básicas del componente raíz de la aplicación.
+ */
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { App } from './app';

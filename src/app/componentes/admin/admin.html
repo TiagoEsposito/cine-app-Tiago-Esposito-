@@ -1,3 +1,4 @@
+<!-- Plantilla de la pantalla/sección de admin de Cine Avellaneda. -->
 <section class="admin-pagina">
   <div class="encabezado">
     <p class="etiqueta">Administración</p>
@@ -297,6 +298,24 @@
       <h2>Nueva recompensa</h2>
       <div class="form">
         <input [(ngModel)]="recompensaNombre" placeholder="Nombre">
+
+        <select [(ngModel)]="recompensaTipo">
+          <option value="entrada">Entrada gratis</option>
+          <option value="candy">Candy Bar</option>
+        </select>
+
+        @if (recompensaTipo === 'candy') {
+          <select [(ngModel)]="recompensaProductoId">
+            <option [ngValue]="0">Producto...</option>
+            @for (p of productos(); track p.id) {
+              @if (p.activo) {
+                <option [ngValue]="p.id">{{ p.nombre }}</option>
+              }
+            }
+          </select>
+          <input type="number" [(ngModel)]="recompensaCantidad" min="1" placeholder="Cantidad">
+        }
+
         <input type="number" [(ngModel)]="costoPuntos" min="1" placeholder="Puntos">
         <button type="button" (click)="crearRecompensa()">Crear recompensa</button>
       </div>
@@ -340,6 +359,11 @@
           }
         </select>
         <input type="number" [(ngModel)]="comboCantidad3" min="1">
+
+        <label class="check">
+          <input type="checkbox" [(ngModel)]="comboIncluyeEntrada">
+          Incluye una entrada
+        </label>
 
         <button type="button" (click)="crearCombo()">Crear combo</button>
       </div>
@@ -393,4 +417,26 @@
       <button type="button" (click)="guardarPreventa()">Guardar preventa</button>
     </div>
   </article>
+  <article class="panel funciones-panel">
+    <div class="panel-head">
+      <div>
+        <span>Actividad</span>
+        <h2>Log de actividad</h2>
+      </div>
+    </div>
+
+    <div class="tabla">
+      @for (item of actividad(); track item.id) {
+        <div class="funcion-row">
+          <strong>{{ item.usuario?.nombre }} {{ item.usuario?.apellido }}</strong>
+          <span>{{ item.accion }}</span>
+          <span>{{ item.detalle }}</span>
+          <span>{{ item.fecha | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+      } @empty {
+        <p>No hay actividad registrada.</p>
+      }
+    </div>
+  </article>
+
 </section>

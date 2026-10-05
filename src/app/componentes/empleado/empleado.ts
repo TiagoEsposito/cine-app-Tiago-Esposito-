@@ -1,3 +1,6 @@
+/**
+ * Implementa la lógica de empleado dentro de la aplicación Cine Avellaneda.
+ */
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { EmpleadoService, VentaQr } from '../../servicios/empleado.service';
@@ -16,6 +19,7 @@ export class Empleado {
   readonly error = signal('');
   readonly cargando = signal(false);
 
+  /** Busca una compra a partir del código QR ingresado. */
   async buscar(): Promise<void> {
     this.error.set('');
     this.mensaje.set('');
@@ -35,6 +39,7 @@ export class Empleado {
     }
   }
 
+  /** Valida la compra encontrada y registra el uso del QR. */
   async validar(): Promise<void> {
     this.error.set('');
     this.mensaje.set('');

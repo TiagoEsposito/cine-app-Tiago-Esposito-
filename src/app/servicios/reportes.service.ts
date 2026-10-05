@@ -1,3 +1,6 @@
+/**
+ * Implementa la lógica de reportes dentro de la aplicación Cine Avellaneda.
+ */
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 
@@ -22,6 +25,7 @@ export interface ReporteVista {
 export class ReportesService {
   private readonly supabase = inject(SupabaseService);
 
+  /** Obtiene y calcula los principales datos de ventas de un día. */
   async resumenDia(
     fecha: string
   ): Promise<{ ingresos: number; entradas: number; compras: number }> {
@@ -46,6 +50,7 @@ export class ReportesService {
     };
   }
 
+  /** Agrupa las ventas y entradas por película para generar un reporte. */
   async ventasPorPeliculas(
     desde: string,
     hasta: string
@@ -85,6 +90,7 @@ export class ReportesService {
     return [...mapa.values()].sort((a, b) => b.entradas - a.entradas);
   }
 
+  /** Agrupa las visualizaciones registradas por película. */
   async vistasPorPeliculas(
     desde: string,
     hasta: string
@@ -111,6 +117,7 @@ export class ReportesService {
       .slice(0, 5);
   }
 
+  /** Calcula qué productos de Candy Bar tuvieron más ventas. */
   async candyMasVendido(
     desde: string,
     hasta: string

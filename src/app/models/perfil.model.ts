@@ -1,3 +1,6 @@
+/**
+ * Define los datos del perfil y los formularios de usuario.
+ */
 export type Rol = 'cliente' | 'empleado' | 'admin';
 
 export interface Perfil {

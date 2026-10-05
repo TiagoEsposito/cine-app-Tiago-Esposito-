@@ -1,3 +1,4 @@
+<!-- Plantilla de la pantalla/sección de compra confirmada de Cine Avellaneda. -->
 <section class="compra-confirmada">
   @if (!compra.tieneVenta() || !compra.tieneSeleccion()) {
     <div class="estado">
@@ -46,6 +47,12 @@
           <strong>Sala:</strong>
           {{ compra.funcion()!.sala_id }}
         </p>
+        @if (compra.requiereAdulto()) {
+          <p class="aviso-adulto">
+            Esta entrada requiere asistir acompañado por un adulto.
+          </p>
+        }
+
         <h2>Asientos</h2>
         <p>
           @for (asiento of compra.asientos(); track asiento.id) {

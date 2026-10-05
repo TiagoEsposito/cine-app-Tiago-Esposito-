@@ -1,3 +1,6 @@
+/**
+ * Implementa la lógica de auth dentro de la aplicación Cine Avellaneda.
+ */
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { Session } from '@supabase/supabase-js';
 import { SupabaseService } from './supabase.service';
@@ -18,6 +21,7 @@ export class AuthService {
 
   readonly listo: Promise<void>;
 
+  /** Inicializa el servicio y configura las suscripciones o datos necesarios para su funcionamiento. */
   constructor() {
     this.listo = this.inicializar();
 
@@ -31,6 +35,7 @@ export class AuthService {
     });
   }
 
+  /** Registra un usuario nuevo mediante Supabase Auth y crea/carga su perfil. */
   async registrar(datos: DatosRegistro): Promise<string | null> {
     const { email, password, ...resto } = datos;
 
@@ -51,6 +56,7 @@ export class AuthService {
     return null;
   }
 
+  /** Inicia sesión con email y contraseña y carga el perfil del usuario. */
   async iniciarSesion(email: string, password: string): Promise<string | null> {
     const { data, error } = await this.supabase.cliente.auth.signInWithPassword({
       email,
@@ -66,6 +72,7 @@ export class AuthService {
   }
 
 
+  /** Actualiza los datos editables del perfil del usuario. */
   async actualizarPerfil(datos: DatosPerfilEditable): Promise<string | null> {
     const usuarioId = this.sesion()?.user.id;
 
@@ -93,6 +100,7 @@ export class AuthService {
     return null;
   }
 
+  /** Vuelve a consultar el perfil actual desde Supabase. */
   async recargarPerfil(): Promise<void> {
     const usuarioId = this.sesion()?.user.id;
     if (usuarioId) {
@@ -100,6 +108,28 @@ export class AuthService {
     }
   }
 
+  /** Suma o resta crédito del usuario y evita que quede en negativo. */
+  async modificarCredito(cambio: number): Promise<void> {
+    const usuarioId = this.sesion()?.user.id;
+    if (!usuarioId) throw new Error('No hay una sesión activa.');
+
+    const creditoActual = Number(this.perfil()?.credito ?? 0);
+    const nuevoCredito = creditoActual + cambio;
+
+    if (nuevoCredito < 0) {
+      throw new Error('No tenés crédito suficiente.');
+    }
+
+    const { error } = await this.supabase.cliente
+      .from('perfiles')
+      .update({ credito: nuevoCredito })
+      .eq('id', usuarioId);
+
+    if (error) throw error;
+    await this.cargarPerfil(usuarioId);
+  }
+
+  /** Cierra la sesión y redirige al usuario fuera de su perfil. */
   async cerrarSesion(): Promise<void> {
     const { error } = await this.supabase.cliente.auth.signOut();
     if (error) {
@@ -107,6 +137,7 @@ export class AuthService {
     }
   }
 
+  /** Inicializa el estado de autenticación y escucha cambios de sesión. */
   private async inicializar(): Promise<void> {
     const { data, error } = await this.supabase.cliente.auth.getSession();
 
@@ -121,6 +152,7 @@ export class AuthService {
     }
   }
 
+  /** Obtiene el perfil de un usuario y actualiza el estado de autenticación. */
   private async cargarPerfil(id: string): Promise<void> {
     const { data, error } = await this.supabase.cliente
       .from('perfiles')
@@ -137,6 +169,7 @@ export class AuthService {
     this.perfil.set(data as Perfil);
   }
 
+  /** Convierte errores de autenticación de Supabase en mensajes entendibles para el usuario. */
   private traducirError(codigo: string | undefined, mensaje: string): string {
     switch (codigo) {
       case 'user_already_exists':

@@ -1,3 +1,6 @@
+/**
+ * Define los tipos utilizados para el historial y detalle de compras.
+ */
 import { Asiento } from './asiento.model';
 import { Funcion } from './funcion.model';
 import { Pelicula } from './pelicula.model';

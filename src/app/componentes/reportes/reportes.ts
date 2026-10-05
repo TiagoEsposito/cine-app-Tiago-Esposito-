@@ -1,4 +1,8 @@
+/**
+ * Implementa la lógica de reportes dentro de la aplicación Cine Avellaneda.
+ */
 import { CommonModule } from '@angular/common';
+import * as XLSX from 'xlsx';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import {
   ReporteCandy,
@@ -28,6 +32,7 @@ export class Reportes implements OnInit {
 
   readonly candyMasVendido = computed(() => this.candy()[0] ?? null);
 
+  /** Inicializa el componente y carga los datos necesarios al entrar en la pantalla. */
   async ngOnInit(): Promise<void> {
     try {
       const hoy = new Date();
@@ -64,11 +69,61 @@ export class Reportes implements OnInit {
     }
   }
 
+  /** Calcula el porcentaje que representa un elemento respecto de una lista. */
   porcentaje(item: ReporteVista, lista: ReporteVista[]): number {
     const mayor = lista[0]?.cantidad ?? 0;
     return mayor ? (item.cantidad / mayor) * 100 : 0;
   }
 
+
+  /** Prepara la vista de reportes para imprimirla o guardarla como PDF. */
+  exportarPdf(): void {
+    window.print();
+  }
+
+  /** Genera un archivo Excel con los datos del reporte. */
+  exportarExcel(): void {
+    const datos = [
+      ...this.semana().map(item => ({
+        Tipo: 'Ventas 7 días',
+        Nombre: item.nombre,
+        Cantidad: item.entradas,
+        Ingresos: item.ingresos,
+      })),
+      ...this.mes().map(item => ({
+        Tipo: 'Ventas mes',
+        Nombre: item.nombre,
+        Cantidad: item.entradas,
+        Ingresos: item.ingresos,
+      })),
+      ...this.vistasSemana().map(item => ({
+        Tipo: 'Vistas semana',
+        Nombre: item.nombre,
+        Cantidad: item.cantidad,
+        Ingresos: 0,
+      })),
+      ...this.vistasMes().map(item => ({
+        Tipo: 'Vistas mes',
+        Nombre: item.nombre,
+        Cantidad: item.cantidad,
+        Ingresos: 0,
+      })),
+      ...this.candy().map(item => ({
+        Tipo: 'Candy Bar mes',
+        Nombre: item.nombre,
+        Cantidad: item.cantidad,
+        Ingresos: item.ingresos,
+      })),
+    ];
+
+    const hoja = XLSX.utils.json_to_sheet(datos);
+    const libro = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(libro, hoja, 'Reporte');
+    XLSX.writeFile(libro, 'reporte-cine-avellaneda.xlsx');
+  }
+
+  /** Formatea una fecha para mostrarla en los reportes. */
   private formatear(fecha: Date): string {
     return fecha.toISOString().slice(0, 10);
   }

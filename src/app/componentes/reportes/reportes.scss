@@ -128,3 +128,29 @@
     gap: 14px;
   }
 }
+
+
+.acciones-reportes {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.acciones-reportes button {
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+@media print {
+  .acciones-reportes,
+  nav,
+  header {
+    display: none !important;
+  }
+
+  .reportes-pagina {
+    padding: 0;
+  }
+}

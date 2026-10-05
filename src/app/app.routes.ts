@@ -1,3 +1,6 @@
+/**
+ * Define las rutas de la aplicación y los guards que protegen las distintas pantallas.
+ */
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
@@ -18,6 +21,11 @@ export const routes: Routes = [
     path: 'registro',
     loadComponent: () =>
       import('./componentes/registro/registro').then((m) => m.Registro),
+  },
+  {
+    path: 'login',
+    loadComponent: () =>
+      import('./componentes/login/login').then((m) => m.Login),
   },
   {
     path: 'perfil',

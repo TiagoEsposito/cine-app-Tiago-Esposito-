@@ -1,3 +1,6 @@
+/**
+ * Implementa la lógica de beneficios dentro de la aplicación Cine Avellaneda.
+ */
 import { inject, Injectable } from '@angular/core';
 import { Combo, Cupon, Recompensa } from '../models/beneficios.model';
 import { SupabaseService } from './supabase.service';
@@ -6,6 +9,7 @@ import { SupabaseService } from './supabase.service';
 export class BeneficiosService {
   private readonly supabase = inject(SupabaseService);
 
+  /** Busca un cupón por su código y comprueba que esté activo. */
   async obtenerCupon(codigo: string): Promise<Cupon | null> {
     const { data, error } = await this.supabase.cliente
       .from('cupones')
@@ -17,6 +21,7 @@ export class BeneficiosService {
     return data as Cupon | null;
   }
 
+  /** Comprueba si un usuario ya tiene compras, por ejemplo para validar un cupón de primera compra. */
   async tieneCompras(usuarioId: string): Promise<boolean> {
     const { count, error } = await this.supabase.cliente
       .from('ventas')
@@ -26,6 +31,7 @@ export class BeneficiosService {
     return (count ?? 0) > 0;
   }
 
+  /** Obtiene los combos disponibles junto con sus productos incluidos. */
   async obtenerCombos(): Promise<Combo[]> {
     const { data, error } = await this.supabase.cliente
       .from('combos')
@@ -69,6 +75,7 @@ export class BeneficiosService {
     return combos;
   }
 
+  /** Obtiene las recompensas disponibles para el sistema de fidelización. */
   async obtenerRecompensas(): Promise<Recompensa[]> {
     const { data, error } = await this.supabase.cliente
       .from('fidelizacion_recompensas')
@@ -76,9 +83,29 @@ export class BeneficiosService {
       .eq('activo', true)
       .order('costo_puntos');
     if (error) throw error;
-    return (data ?? []) as Recompensa[];
+
+    const recompensas = (data ?? []) as Recompensa[];
+    const productosIds = recompensas
+      .filter(recompensa => recompensa.tipo === 'candy' && recompensa.producto_id)
+      .map(recompensa => recompensa.producto_id as number);
+
+    if (productosIds.length) {
+      const { data: productos, error: productosError } = await this.supabase.cliente
+        .from('candy_productos')
+        .select('id,nombre,precio')
+        .in('id', productosIds);
+
+      if (productosError) throw productosError;
+
+      for (const recompensa of recompensas) {
+        recompensa.producto = productos?.find(producto => producto.id === recompensa.producto_id) ?? null;
+      }
+    }
+
+    return recompensas;
   }
 
+  /** Suma puntos de fidelización al usuario y registra el movimiento. */
   async sumarPuntos(usuarioId: string, puntos: number, ventaId: number): Promise<void> {
     const cantidad = Math.floor(puntos);
     if (cantidad <= 0) return;
@@ -110,6 +137,7 @@ export class BeneficiosService {
     if (movimientoError) throw movimientoError;
   }
 
+  /** Obtiene el historial de recompensas canjeadas por el usuario. */
   async obtenerCanjes(usuarioId: string): Promise<any[]> {
     const { data, error } = await this.supabase.cliente
       .from('fidelizacion_movimientos')
@@ -128,6 +156,7 @@ export class BeneficiosService {
     }));
   }
 
+  /** Canjea una recompensa descontando puntos y generando su código. */
   async canjearRecompensa(id: number): Promise<string> {
     const usuario = (await this.supabase.cliente.auth.getUser()).data.user;
     if (!usuario) throw new Error('Iniciá sesión.');
@@ -182,6 +211,7 @@ export class BeneficiosService {
     return codigo;
   }
 
+  /** Activa una alerta de estreno para una película. */
   async activarAlerta(usuarioId: string, peliculaId: number): Promise<void> {
     const { error } = await this.supabase.cliente
       .from('alertas_estreno')
@@ -189,6 +219,7 @@ export class BeneficiosService {
     if (error) throw error;
   }
 
+  /** Guarda la configuración de preventa de una película. */
   async configurarPreventa(peliculaId: number, activa: boolean, precio: number | null): Promise<void> {
     const { error } = await this.supabase.cliente
       .from('peliculas')
@@ -197,6 +228,7 @@ export class BeneficiosService {
     if (error) throw error;
   }
 
+  /** Crea un cupón desde el panel de administración. */
   async crearCupon(codigo: string, porcentaje: number, primeraCompra: boolean, edadMinima: number): Promise<void> {
     const { error } = await this.supabase.cliente
       .from('cupones')
@@ -210,6 +242,7 @@ export class BeneficiosService {
     if (error) throw error;
   }
 
+  /** Crea una recompensa desde el panel de administración. */
   async crearRecompensa(nombre: string, costo: number): Promise<void> {
     const { error } = await this.supabase.cliente
       .from('fidelizacion_recompensas')
@@ -217,6 +250,7 @@ export class BeneficiosService {
     if (error) throw error;
   }
 
+  /** Crea un combo y sus productos desde el panel de administración. */
   async crearCombo(nombre: string, precio: number, descripcion: string, productoId: number, cantidad: number): Promise<void> {
     const { data, error } = await this.supabase.cliente
       .from('combos')

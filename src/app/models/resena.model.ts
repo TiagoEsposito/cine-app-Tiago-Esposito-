@@ -1,3 +1,6 @@
+/**
+ * Define la estructura de las reseñas de películas.
+ */
 export interface Resena {
   id: number;
   pelicula_id: number;

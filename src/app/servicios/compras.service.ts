@@ -1,3 +1,6 @@
+/**
+ * Implementa la lógica de compras dentro de la aplicación Cine Avellaneda.
+ */
 import { inject, Injectable } from '@angular/core';
 import { Asiento } from '../models/asiento.model';
 import { CompraHistorial } from '../models/compra.model';
@@ -9,6 +12,7 @@ import { SupabaseService } from './supabase.service';
 export class ComprasService {
   private readonly supabase = inject(SupabaseService);
 
+  /** Obtiene el historial de compras de un usuario con sus funciones, asientos y productos. */
   async obtenerHistorial(usuarioId: string): Promise<CompraHistorial[]> {
     const { data, error } = await this.supabase.cliente
       .from('ventas')
@@ -92,6 +96,7 @@ export class ComprasService {
     });
   }
 
+  /** Solicita la cancelación de una compra y actualiza el perfil con el crédito devuelto. */
   async cancelarCompra(ventaId: number): Promise<number> {
     const usuario = (await this.supabase.cliente.auth.getUser()).data.user;
     if (!usuario) throw new Error('Iniciá sesión para cancelar una compra.');
@@ -160,6 +165,7 @@ export class ComprasService {
     return credito;
   }
 
+  /** Comprueba si una compra todavía puede cancelarse según el límite de tiempo. */
   puedeCancelar(compra: CompraHistorial): boolean {
     if (compra.estado !== 'pagada') return false;
 

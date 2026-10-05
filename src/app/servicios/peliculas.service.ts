@@ -1,7 +1,11 @@
+/**
+ * Implementa la lógica de peliculas dentro de la aplicación Cine Avellaneda.
+ */
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { Pelicula } from '../models/pelicula.model';
 import { Resena } from '../models/resena.model';
+import { ActividadService } from './actividad.service';
 
 export interface PeliculaVendida {
   id: number;
@@ -13,7 +17,9 @@ export interface PeliculaVendida {
 @Injectable({ providedIn: 'root' })
 export class PeliculasService {
   private readonly supabase = inject(SupabaseService);
+  private readonly actividad = inject(ActividadService);
 
+  /** Obtiene las películas desde Supabase, pudiendo limitarse a las que están activas. */
   async obtenerPeliculas(soloActivas = true): Promise<Pelicula[]> {
     let consulta = this.supabase.cliente
       .from('peliculas')
@@ -30,6 +36,7 @@ export class PeliculasService {
     return (data ?? []) as Pelicula[];
   }
 
+  /** Obtiene la lista de géneros disponibles para filtros y formularios. */
   async obtenerGeneros(): Promise<{ id: number; nombre: string }[]> {
     const { data, error } = await this.supabase.cliente
       .from('generos')
@@ -40,6 +47,7 @@ export class PeliculasService {
     return data ?? [];
   }
 
+  /** Calcula las tres películas con más entradas vendidas. */
   async obtenerTop3Vendidas(): Promise<PeliculaVendida[]> {
     const { data, error } = await this.supabase.cliente
       .from('ventas')
@@ -83,6 +91,7 @@ export class PeliculasService {
       .slice(0, 3);
   }
 
+  /** Obtiene las reseñas públicas de una película. */
   async obtenerResenas(peliculaId: number): Promise<Resena[]> {
     const { data, error } = await this.supabase.cliente
       .from('reseñas_publicas')
@@ -106,6 +115,7 @@ export class PeliculasService {
     }));
   }
 
+  /** Obtiene las puntuaciones que realizó un usuario sobre películas. */
   async obtenerResenasDelUsuario(
     usuarioId: string
   ): Promise<{ pelicula_id: number; puntuacion: number }[]> {
@@ -122,6 +132,7 @@ export class PeliculasService {
     }));
   }
 
+  /** Busca la reseña que un usuario ya realizó para una película. */
   async obtenerResenaDelUsuario(
     peliculaId: number,
     usuarioId: string
@@ -137,6 +148,7 @@ export class PeliculasService {
     return data as Resena | null;
   }
 
+  /** Crea una nueva reseña para una película y controla si ya existe una reseña del usuario. */
   async crearResena(
     peliculaId: number,
     usuarioId: string,
@@ -164,6 +176,7 @@ export class PeliculasService {
     return data as Resena;
   }
 
+  /** Busca una película concreta por su ID. */
   async obtenerPelicula(id: number): Promise<Pelicula | null> {
     const { data, error } = await this.supabase.cliente
       .from('peliculas')
@@ -175,6 +188,7 @@ export class PeliculasService {
     return data as Pelicula;
   }
 
+  /** Actualiza los datos de una película en Supabase y registra la actividad. */
   async actualizarPelicula(
     id: number,
     cambios: {
@@ -193,8 +207,10 @@ export class PeliculasService {
       .eq('id', id);
 
     if (error) throw error;
+    await this.actividad.registrar('Modificar película', `Película #${id} · precio/edad/datos actualizados`);
   }
 
+  /** Registra que una película fue visualizada para estadísticas. */
   async registrarVista(peliculaId: number, usuarioId: string | null): Promise<void> {
     const { error } = await this.supabase.cliente
       .from('pelicula_vistas')

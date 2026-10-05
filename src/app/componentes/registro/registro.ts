@@ -1,3 +1,6 @@
+/**
+ * Implementa la lógica de registro dentro de la aplicación Cine Avellaneda.
+ */
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
@@ -120,6 +123,7 @@ export class Registro {
     },
   );
 
+  /** Construye una fecha válida a partir de día, mes y año del formulario. */
   private armarFecha(dia: string, mes: string, anio: string): string | null {
   const d = Number(dia);
   const m = Number(mes);

@@ -1,3 +1,6 @@
+/**
+ * Define la estructura de una función cinematográfica.
+ */
 export interface Funcion {
   id: number;
   pelicula_id: number;
