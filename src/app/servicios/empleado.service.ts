@@ -6,6 +6,7 @@ import { SupabaseService } from './supabase.service';
 import { ActividadService } from './actividad.service';
 
 export interface VentaQr {
+  tipo: 'compra';
   id: number;
   codigo_qr: string;
   estado: string;
@@ -28,15 +29,28 @@ export interface VentaQr {
   };
 }
 
+export interface RecompensaCanje {
+  tipo: 'recompensa';
+  id: number;
+  codigo: string;
+  nombre: string;
+  puntos: number;
+  detalle: string;
+  fecha_creacion: string;
+  utilizado: boolean;
+}
+
+export type ValidacionEmpleado = VentaQr | RecompensaCanje;
+
 @Injectable({ providedIn: 'root' })
 export class EmpleadoService {
   private readonly supabase = inject(SupabaseService);
   private readonly actividad = inject(ActividadService);
 
-  /** Busca una venta utilizando el código QR presentado por el cliente. */
-  async buscarPorQr(codigo: string): Promise<VentaQr> {
+  /** Busca una compra exclusivamente por el código almacenado en ventas.codigo_qr. */
+  async buscarCompraPorQr(codigo: string): Promise<VentaQr> {
     const limpio = codigo.trim();
-    if (!limpio) throw new Error('Ingresá un código QR.');
+    if (!limpio) throw new Error('Ingresá el código de la compra.');
 
     const { data, error } = await this.supabase.cliente
       .from('ventas')
@@ -48,7 +62,6 @@ export class EmpleadoService {
     if (!data) throw new Error('No encontramos una compra con ese código.');
 
     const venta = data as any;
-
     const [{ data: funcion, error: funcionError }, { data: productosVenta, error: productosError }] = await Promise.all([
       this.supabase.cliente
         .from('funciones')
@@ -77,6 +90,7 @@ export class EmpleadoService {
 
     return {
       ...venta,
+      tipo: 'compra',
       funcion: funcion ? { ...funcion, pelicula } : undefined,
       productos: (productosVenta ?? []).map((item: any) => ({
         nombre: item.candy_productos?.nombre ?? 'Producto',
@@ -86,9 +100,40 @@ export class EmpleadoService {
     } as VentaQr;
   }
 
+  /** Busca exclusivamente un código generado por un canje de puntos. */
+  async buscarRecompensaPorCodigo(codigo: string): Promise<RecompensaCanje> {
+    const codigoRecompensa = codigo.trim().toUpperCase();
+    if (!codigoRecompensa) throw new Error('Ingresá el código de la recompensa.');
+
+    const { data: movimientos, error } = await this.supabase.cliente
+      .from('fidelizacion_movimientos')
+      .select('id,puntos,detalle,fecha_creacion')
+      .eq('tipo', 'canje')
+      .ilike('detalle', `%Código: ${codigoRecompensa}%`)
+      .limit(1);
+
+    if (error) throw error;
+    const movimiento = movimientos?.[0] as any;
+    if (!movimiento) throw new Error('No encontramos una recompensa con ese código.');
+
+    const utilizado = /\| Estado: UTILIZADO(?: \||$)/i.test(movimiento.detalle ?? '');
+    const nombre = movimiento.detalle?.match(/^Canje: (.+?) \| Código:/)?.[1] ?? 'Recompensa';
+
+    return {
+      tipo: 'recompensa',
+      id: movimiento.id,
+      codigo: codigoRecompensa,
+      nombre,
+      puntos: Math.abs(Number(movimiento.puntos ?? 0)),
+      detalle: movimiento.detalle ?? '',
+      fecha_creacion: movimiento.fecha_creacion,
+      utilizado,
+    };
+  }
+
   /** Valida el QR de una compra y registra el uso de la entrada o Candy Bar. */
   async validarQr(codigo: string): Promise<VentaQr> {
-    const venta = await this.buscarPorQr(codigo);
+    const venta = await this.buscarCompraPorQr(codigo);
     if (venta.estado !== 'pagada') throw new Error('La compra no está activa.');
     if (venta.entrada_validada || venta.candy_retirado) {
       throw new Error('Este QR ya fue utilizado y dejó de estar disponible.');
@@ -128,6 +173,44 @@ export class EmpleadoService {
     if (logError) throw logError;
     await this.actividad.registrar('Validar QR', `Venta #${venta.id} · entrada y Candy: ${tieneCandy ? 'sí' : 'no'}`);
 
-    return this.buscarPorQr(codigo);
+    return this.buscarCompraPorQr(codigo);
   }
+
+  /** Valida un código de recompensa y lo marca como utilizado para impedir un segundo canje. */
+  async validarRecompensa(codigo: string): Promise<RecompensaCanje> {
+    const resultado = await this.buscarRecompensaPorCodigo(codigo);
+    if (resultado.utilizado) throw new Error('Este código de recompensa ya fue utilizado.');
+
+    const usuario = (await this.supabase.cliente.auth.getUser()).data.user;
+    if (!usuario) throw new Error('No hay un empleado autenticado.');
+
+    const ahora = new Date().toISOString();
+    const nuevoDetalle = `${resultado.detalle} | Estado: UTILIZADO | Validado: ${ahora} | Empleado: ${usuario.id}`;
+
+    const { data, error } = await this.supabase.cliente
+      .from('fidelizacion_movimientos')
+      .update({ detalle: nuevoDetalle })
+      .eq('id', resultado.id)
+      .eq('tipo', 'canje')
+      .eq('detalle', resultado.detalle)
+      .select('id,puntos,detalle,fecha_creacion')
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) throw new Error('El código ya fue utilizado o cambió antes de validarlo.');
+
+    // El registro en el log es secundario: si falla, no debe hacer fallar una validación que ya se realizó.
+    try {
+      await this.actividad.registrar('Validar recompensa', `${resultado.nombre} · código ${resultado.codigo}`);
+    } catch {
+      // La recompensa ya quedó validada; se ignora únicamente el fallo del registro de actividad.
+    }
+
+    return {
+      ...resultado,
+      detalle: data.detalle,
+      utilizado: true,
+    };
+  }
+
 }

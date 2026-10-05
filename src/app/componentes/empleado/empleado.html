@@ -1,33 +1,39 @@
-<!-- Plantilla de la pantalla/sección de empleado de Cine Avellaneda. -->
+<!-- Pantalla de empleado con formularios independientes para compras y recompensas. -->
 <section class="empleado-pagina">
   <div class="encabezado">
     <p class="etiqueta">Personal del cine</p>
-    <h1>Validación de QR</h1>
-    <p>Ingresá el código del QR para ver toda la compra y validarla de una sola vez.</p>
+    <h1>Validación de compras y recompensas</h1>
+    <p>Las compras se validan con el código de su QR y las recompensas se validan ingresando manualmente el código generado al canjear puntos.</p>
   </div>
 
+  <!-- FORMULARIO EXCLUSIVO PARA COMPRAS -->
   <article class="panel">
-    <label>Código QR
-      <input [(ngModel)]="codigo" placeholder="Pegá o escribí el código" autocomplete="off" (keyup.enter)="buscar()">
+    <div>
+      <span class="etiqueta">Compras</span>
+      <h2>Validar compra</h2>
+      <p>Ingresá el código asociado al QR de la compra.</p>
+    </div>
+    <label>Código de compra
+      <input [(ngModel)]="codigoCompra" placeholder="Código del QR de la compra" autocomplete="off" (keyup.enter)="buscarCompra()">
     </label>
-    <button type="button" (click)="buscar()" [disabled]="cargando()">
-      {{ cargando() ? 'Buscando...' : 'Buscar compra' }}
+    <button type="button" (click)="buscarCompra()" [disabled]="cargandoCompra()">
+      {{ cargandoCompra() ? 'Buscando...' : 'Buscar compra' }}
     </button>
   </article>
 
-  @if (error()) { <div class="error">{{ error() }}</div> }
-  @if (mensaje()) { <div class="mensaje">{{ mensaje() }}</div> }
+  @if (errorCompra()) { <div class="error">{{ errorCompra() }}</div> }
+  @if (mensajeCompra()) { <div class="mensaje">{{ mensajeCompra() }}</div> }
 
-  @if (venta(); as compra) {
+  @if (compra(); as item) {
     <article class="panel compra">
       <div>
-        <span>Compra #{{ compra.id }}</span>
-        <h2>{{ compra.funcion?.pelicula?.titulo ?? 'Película' }}</h2>
-        @if (compra.funcion) {
-          <p>{{ compra.funcion.fecha }} · {{ compra.funcion.hora_inicio }} · Sala {{ compra.funcion.sala_id }}</p>
+        <span>Compra #{{ item.id }}</span>
+        <h2>{{ item.funcion?.pelicula?.titulo ?? 'Película' }}</h2>
+        @if (item.funcion) {
+          <p>{{ item.funcion.fecha }} · {{ item.funcion.hora_inicio }} · Sala {{ item.funcion.sala_id }}</p>
         }
       </div>
-      <strong>${{ compra.total }}</strong>
+      <strong>${{ item.total }}</strong>
     </article>
 
     <article class="panel detalle-compra">
@@ -36,18 +42,18 @@
           <span class="etiqueta">Detalle de compra</span>
           <h2>Lo que compró el cliente</h2>
         </div>
-        <span class="estado-compra">Compra #{{ compra.id }}</span>
+        <span class="estado-compra">Compra #{{ item.id }}</span>
       </div>
 
       <div class="detalle-linea entrada-linea">
         <div>
           <strong>🎬 Entrada</strong>
-          <span>{{ compra.funcion?.pelicula?.titulo ?? 'Película' }}</span>
+          <span>{{ item.funcion?.pelicula?.titulo ?? 'Película' }}</span>
         </div>
         <strong>x1</strong>
       </div>
 
-      @for (combo of compra.detalle_compra?.combos ?? []; track combo.nombre) {
+      @for (combo of item.detalle_compra?.combos ?? []; track combo.nombre) {
         <div class="detalle-linea">
           <div>
             <strong>🍿 {{ combo.nombre }}</strong>
@@ -57,41 +63,100 @@
         </div>
       }
 
-      @for (item of compra.detalle_compra?.candy ?? []; track item.nombre) {
+      @for (candy of item.detalle_compra?.candy ?? []; track candy.nombre) {
         <div class="detalle-linea">
           <div>
-            <strong>🥤 {{ item.nombre }}</strong>
-            <span>Candy Bar · ${{ item.precio }}</span>
+            <strong>🥤 {{ candy.nombre }}</strong>
+            <span>Candy Bar · ${{ candy.precio }}</span>
           </div>
-          <strong>x{{ item.cantidad }}</strong>
+          <strong>x{{ candy.cantidad }}</strong>
         </div>
       }
 
-      @if (!compra.detalle_compra?.combos?.length && !compra.detalle_compra?.candy?.length) {
-        @for (item of compra.productos ?? []; track item.nombre) {
+      @if (!item.detalle_compra?.combos?.length && !item.detalle_compra?.candy?.length) {
+        @for (producto of item.productos ?? []; track producto.nombre) {
           <div class="detalle-linea">
             <div>
-              <strong>🥤 {{ item.nombre }}</strong>
-              <span>Candy Bar · ${{ item.precio }}</span>
+              <strong>🥤 {{ producto.nombre }}</strong>
+              <span>Candy Bar · ${{ producto.precio }}</span>
             </div>
-            <strong>x{{ item.cantidad }}</strong>
+            <strong>x{{ producto.cantidad }}</strong>
           </div>
         }
       }
 
-      @if (!(compra.detalle_compra?.combos?.length) && !(compra.detalle_compra?.candy?.length) && !(compra.productos?.length)) {
+      @if (!(item.detalle_compra?.combos?.length) && !(item.detalle_compra?.candy?.length) && !(item.productos?.length)) {
         <p class="sin-candy">No compró productos del Candy Bar.</p>
       }
     </article>
 
-    @if (compra.entrada_validada || compra.candy_retirado) {
+    @if (item.entrada_validada || item.candy_retirado) {
       <div class="bloqueado">Este QR ya fue utilizado. No puede volver a validarse.</div>
     } @else {
       <article class="panel accion">
         <h2>Validar compra</h2>
-        <p>Al validar este QR se registra la entrada y, si corresponde, la entrega de todo el Candy Bar incluido en la compra.</p>
-        <button type="button" (click)="validar()" [disabled]="cargando()">
-          {{ cargando() ? 'Validando...' : 'Validar QR' }}
+        <p>Al validar este QR se registra la entrada y, si corresponde, la entrega del Candy Bar.</p>
+        <button type="button" (click)="validarCompra()" [disabled]="cargandoCompra()">
+          {{ cargandoCompra() ? 'Validando...' : 'Validar compra' }}
+        </button>
+      </article>
+    }
+  }
+
+  <!-- FORMULARIO EXCLUSIVO PARA RECOMPENSAS -->
+  <article class="panel">
+    <div>
+      <span class="etiqueta">Recompensas</span>
+      <h2>Validar recompensa por puntos</h2>
+      <p>Ingresá manualmente el código que recibió el cliente al canjear sus puntos. Este formulario no utiliza QR.</p>
+    </div>
+    <label>Código de recompensa
+      <input [(ngModel)]="codigoRecompensa" placeholder="Ej: AB12CD34" autocomplete="off" (keyup.enter)="buscarRecompensa()">
+    </label>
+    <button type="button" (click)="buscarRecompensa()" [disabled]="cargandoRecompensa()">
+      {{ cargandoRecompensa() ? 'Buscando...' : 'Buscar recompensa' }}
+    </button>
+  </article>
+
+  @if (errorRecompensa()) { <div class="error">{{ errorRecompensa() }}</div> }
+  @if (mensajeRecompensa()) { <div class="mensaje">{{ mensajeRecompensa() }}</div> }
+
+  @if (recompensa(); as item) {
+    <article class="panel compra">
+      <div>
+        <span>Recompensa por puntos</span>
+        <h2>{{ item.nombre }}</h2>
+        <p>Código: {{ item.codigo }} · {{ item.puntos }} puntos</p>
+      </div>
+      <strong>{{ item.utilizado ? 'UTILIZADO' : 'VÁLIDO' }}</strong>
+    </article>
+
+    <article class="panel detalle-compra">
+      <div class="detalle-titulo">
+        <div>
+          <span class="etiqueta">Detalle del canje</span>
+          <h2>Recompensa</h2>
+        </div>
+        <span class="estado-compra">Código {{ item.codigo }}</span>
+      </div>
+
+      <div class="detalle-linea entrada-linea">
+        <div>
+          <strong>🎁 {{ item.nombre }}</strong>
+          <span>Canjeada con {{ item.puntos }} puntos</span>
+        </div>
+        <strong>1</strong>
+      </div>
+    </article>
+
+    @if (item.utilizado) {
+      <div class="bloqueado">Esta recompensa ya fue utilizada. No puede volver a validarse.</div>
+    } @else {
+      <article class="panel accion">
+        <h2>Validar recompensa</h2>
+        <p>Al validar este código se registra la entrega y se impide volver a utilizarlo.</p>
+        <button type="button" (click)="validarRecompensa()" [disabled]="cargandoRecompensa()">
+          {{ cargandoRecompensa() ? 'Validando...' : 'Validar recompensa' }}
         </button>
       </article>
     }
